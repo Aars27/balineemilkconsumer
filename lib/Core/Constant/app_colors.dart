@@ -1,0 +1,37 @@
+import 'package:flutter/material.dart';
+
+class AppColors {
+  static const Color white = Colors.white;
+  static const Color black = Colors.black;
+  static const Color grey = Colors.black54;
+  static const Color logincolor = Color(0xFF74cdf7);
+
+  static const Color textDark = Color(0xFF333333);
+  static const Color textLight = Color(0xFF666666);
+  static const Color cardBackground = Color(0xFFFAFAFA);
+  static const Color accentRed = Color(0xFFF05941);
+  static const Color advanceColor = Color(0xFF3372fd);
+  static const Color primaryGreen = Color(0xFF01b847);
+
+  static const Color lightCardYellow = Color(0xFFFFFBE5);
+  static const Color lightCardGreen = Color(0xFFE8F5E9);
+  static const Color lightCardPurple = Color(0xFFF3E5F5);
+  static const Color lightCardBlue = Color(0xFFE3F2FD);
+  static const Color darkTextColor = Color(0xFF333333);
+
+  // ============================
+  // Gradient Background (NEW)
+  // ============================
+  static const Color gradientStart = Color(0xFF98C9F3);
+  static const Color gradientEnd = Color(0xFF0372BB);
+
+  static const LinearGradient routeBackgroundGradient = LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [
+      gradientStart,
+      gradientEnd,
+    ],
+    transform: GradientRotation(135 * 3.14159 / 180),
+  );
+}
