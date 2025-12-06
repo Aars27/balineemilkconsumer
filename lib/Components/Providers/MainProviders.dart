@@ -4,6 +4,8 @@ import 'package:consumerbalinee/Features/ViewScreens/SplashScreen/SplashControll
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../Core/Router/router.dart';
+import '../../Features/ViewScreens/CartScreen/CartScreen.dart';
+import '../../Features/ViewScreens/DailyOrderScreen/DailyOrderScreen.dart';
 import '../../Features/ViewScreens/LoginPageScreen/LoginController.dart';
 import '../../Features/ViewScreens/OtpScreen/OtpController.dart';
 import '../../Features/ViewScreens/SignupScreen/SignupControllar.dart';
@@ -22,6 +24,10 @@ class Mainproviders extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => SignupController()),
         ChangeNotifierProvider(create: (_) => OtpController()),
         ChangeNotifierProvider(create: (_) => DashboardController()),
+        ChangeNotifierProvider(create: (_) => DailyOrderController()),
+        ChangeNotifierProvider(create: (_) =>  CartController()),
+
+
 
 
 

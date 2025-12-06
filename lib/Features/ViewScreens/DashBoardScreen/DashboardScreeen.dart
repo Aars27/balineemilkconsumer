@@ -340,7 +340,7 @@ class DashboardView extends StatelessWidget {
                   sliver: SliverGrid(
                     gridDelegate:
                     const SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 4,
+                      crossAxisCount: 3,
                       childAspectRatio: 0.8,
                       crossAxisSpacing: 12,
                       mainAxisSpacing: 16,
@@ -357,21 +357,8 @@ class DashboardView extends StatelessWidget {
 
                 // Freshness Banner
                 SliverToBoxAdapter(
-                  child: Container(
-                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    padding: const EdgeInsets.all(24),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        colors: [
-                          const Color(0xFF4A90E2).withOpacity(0.08),
-                          const Color(0xFF5BA3F5).withOpacity(0.08),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                          color:
-                          const Color(0xFF4A90E2).withOpacity(0.2)),
-                    ),
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -380,7 +367,7 @@ class DashboardView extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 26,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF4A90E2),
+                            color: Colors.red,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -443,7 +430,7 @@ class ProductCard extends StatelessWidget {
         children: [
           // Product Image
           Container(
-            height: 40,
+            height: 80,
             decoration: BoxDecoration(
               color: const Color(0xFFF8F9FA),
               borderRadius:

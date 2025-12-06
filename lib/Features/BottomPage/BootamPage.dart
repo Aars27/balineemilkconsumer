@@ -6,6 +6,7 @@ import 'package:consumerbalinee/Features/ViewScreens/ProfileScreen/ProfileScreen
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../Core/Constant/app_colors.dart';
 import '../ViewScreens/DashBoardScreen/DashboardScreeen.dart';
 import 'MainNavigator.dart';
 
@@ -14,7 +15,7 @@ class MainWrapperScreen extends StatelessWidget {
 
   final List<Widget> _screens = [
     DashboardScreen(), // Your dashboard screen
-    Dailyorderscreen(), // Create this screen
+    DailyOrderView(), // Create this screen
     Cartscreen(), // Create this screen
     Orderhistoryscreen(), // Create this screen
     Profilescreen(), // Create this screen
@@ -41,8 +42,15 @@ class MainWrapperScreen extends StatelessWidget {
 
   Widget _buildModernBottomNavBar(BuildContext context, MainNavigationController controller) {
     return Container(
+      height: 80,
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: AppColors.gradientEnd,
+        borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(12),
+          topRight: Radius.circular(12),
+            // bottomLeft: Radius.circular(12),
+            // bottomRight: Radius.circular(12)
+        ),
         boxShadow: [
           BoxShadow(
             color: Colors.grey.withOpacity(0.2),
@@ -117,7 +125,7 @@ class MainWrapperScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFF4A90E2).withOpacity(0.1) : Colors.transparent,
+          color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -128,7 +136,7 @@ class MainWrapperScreen extends StatelessWidget {
               children: [
                 Icon(
                   icon,
-                  color: isSelected ? const Color(0xFF4A90E2) : Colors.grey[400],
+                  color: isSelected ? Colors.white : Colors.white54,
                   size: 26,
                 ),
                 if (showBadge && badgeCount > 0)
@@ -162,7 +170,7 @@ class MainWrapperScreen extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? const Color(0xFF4A90E2) : Colors.grey[600],
+                color: isSelected ? Colors.white: Colors.grey[600],
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),
