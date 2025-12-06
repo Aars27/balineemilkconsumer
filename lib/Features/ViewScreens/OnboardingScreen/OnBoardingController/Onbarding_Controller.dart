@@ -16,16 +16,18 @@ class OnboardingController extends ChangeNotifier {
   final List<OnboardingModel> pages = [
 
     OnboardingModel(
-      image: 'assets/onboarding.gif',
+      image: 'assets/onboarding1.gif',
       title: 'Fresh Milk, Every Morning',
       description: 'Subscribe once and get the freshest milk and daily essentials delivered right to your doorstep.',
     ),
     OnboardingModel(
-      image: 'assets/onboarding.gif',
+      image: 'assets/gif.gif',
       title: 'Pause or Modify Anytime',
       description: 'Easily pause, reschedule, or change your order quantity from the app with just a few taps.',
     ),
   ];
+
+
 
   void updateIndex(int index) {
     _currentIndex = index;

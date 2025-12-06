@@ -1,74 +1,174 @@
-
 import 'package:consumerbalinee/Features/NotificationScreen/NotificationScreen.dart';
+import 'package:consumerbalinee/Features/ViewScreens/CartScreen/CartScreen.dart';
+import 'package:consumerbalinee/Features/ViewScreens/DailyOrderScreen/DailyOrderScreen.dart';
+import 'package:consumerbalinee/Features/ViewScreens/OrderHistoryScreen/OrderHistoryScreen.dart';
+import 'package:consumerbalinee/Features/ViewScreens/ProfileScreen/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import '../../Core/Constant/app_colors.dart';
+import '../ViewScreens/DashBoardScreen/DashboardScreeen.dart';
 import 'MainNavigator.dart';
-
-
-
 
 class MainWrapperScreen extends StatelessWidget {
   MainWrapperScreen({super.key});
 
-  final List<Widget> _screens =  [
-    NotificationScreen(),
-    NotificationScreen(),
-    NotificationScreen(),
-    NotificationScreen(),
-    NotificationScreen(),
-
-
-
+  final List<Widget> _screens = [
+    DashboardScreen(), // Your dashboard screen
+    Dailyorderscreen(), // Create this screen
+    Cartscreen(), // Create this screen
+    Orderhistoryscreen(), // Create this screen
+    Profilescreen(), // Create this screen
   ];
 
   @override
   Widget build(BuildContext context) {
-    // Provide the controller for the navigation state
     return ChangeNotifierProvider(
       create: (_) => MainNavigationController(),
       child: Consumer<MainNavigationController>(
         builder: (context, controller, child) {
           return Scaffold(
             backgroundColor: Colors.white,
-            // Display the current screen based on the controller's state
-            body: _screens[controller.currentIndex],
-
-            // Use the updated bottom navigation bar
-            bottomNavigationBar: _buildBottomNavBar(context, controller),
+            body: IndexedStack(
+              index: controller.currentIndex,
+              children: _screens,
+            ),
+            bottomNavigationBar: _buildModernBottomNavBar(context, controller),
           );
         },
       ),
     );
   }
 
-  // Updated _buildBottomNavBar function
-  Widget _buildBottomNavBar(BuildContext context, MainNavigationController controller) {
-    return SizedBox(
-      height: 60,
-      child: BottomNavigationBar(
-        backgroundColor: AppColors.gradientEnd,
-        type: BottomNavigationBarType.fixed,
-        selectedItemColor: Colors.white,
-        unselectedItemColor: Colors.white54,
-        showUnselectedLabels: true,
-
-        // Get the current index from the controller
-        currentIndex: controller.currentIndex,
-
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
-          BottomNavigationBarItem(icon: Icon(Icons.location_on_outlined), label: 'Route'),
-          BottomNavigationBarItem(icon: Icon(Icons.payment), label: 'Payment'),
-          BottomNavigationBarItem(icon: Icon(Icons.note_outlined), label: 'Report'),
-          BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
+  Widget _buildModernBottomNavBar(BuildContext context, MainNavigationController controller) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.grey.withOpacity(0.2),
+            blurRadius: 20,
+            offset: const Offset(0, -5),
+          ),
         ],
+      ),
+      child: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(
+                context,
+                controller,
+                index: 0,
+                icon: Icons.home_rounded,
+                label: 'Home',
+              ),
+              _buildNavItem(
+                context,
+                controller,
+                index: 1,
+                icon: Icons.calendar_today_rounded,
+                label: 'Daily Orders',
+              ),
+              _buildNavItem(
+                context,
+                controller,
+                index: 2,
+                icon: Icons.shopping_cart_rounded,
+                label: 'Carts',
+                showBadge: true,
+                badgeCount: 3,
+              ),
+              _buildNavItem(
+                context,
+                controller,
+                index: 3,
+                icon: Icons.receipt_long_rounded,
+                label: 'Order',
+              ),
+              _buildNavItem(
+                context,
+                controller,
+                index: 4,
+                icon: Icons.person_rounded,
+                label: 'Profile',
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 
-        // Call the controller's method on tap
-        onTap: (index) {
-          controller.setIndex(index);
-        },
+  Widget _buildNavItem(
+      BuildContext context,
+      MainNavigationController controller, {
+        required int index,
+        required IconData icon,
+        required String label,
+        bool showBadge = false,
+        int badgeCount = 0,
+      }) {
+    final isSelected = controller.currentIndex == index;
+
+    return GestureDetector(
+      onTap: () => controller.setIndex(index),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF4A90E2).withOpacity(0.1) : Colors.transparent,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Icon(
+                  icon,
+                  color: isSelected ? const Color(0xFF4A90E2) : Colors.grey[400],
+                  size: 26,
+                ),
+                if (showBadge && badgeCount > 0)
+                  Positioned(
+                    right: -6,
+                    top: -4,
+                    child: Container(
+                      padding: const EdgeInsets.all(4),
+                      decoration: const BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(
+                        minWidth: 18,
+                        minHeight: 18,
+                      ),
+                      child: Text(
+                        badgeCount.toString(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? const Color(0xFF4A90E2) : Colors.grey[600],
+                fontSize: 11,
+                fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

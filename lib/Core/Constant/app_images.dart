@@ -3,7 +3,7 @@ class AppImages {
   static const String appLogo = 'assets/Balinee-milk.gif';
 
   // Onboarding Images
-  static const String onboard1 = 'assets/onboarding.gif';
+  static const String onboard1 = 'assets/onboarding1.gif';
   static const String onboard2 = 'assets/onboarding1.gif';
   static const String onboard3 = 'assets/onboarding2.gif';
 

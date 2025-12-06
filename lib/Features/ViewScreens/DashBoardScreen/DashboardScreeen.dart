@@ -1,333 +1,550 @@
 import 'package:flutter/material.dart';
-// Assuming these are defined in your project
-import 'package:consumerbalinee/Core/Constant/app_colors.dart';
-import 'package:consumerbalinee/Core/Constant/text_constants.dart';
+import 'package:provider/provider.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 
-// --- MOCK DATA STRUCTURES ---
-
-class DeliveryInfo {
-  final String date;
-  final String item;
-  final double quantity;
-
-  DeliveryInfo(this.date, this.item, this.quantity);
-}
+import 'ControllerDashboard.dart';
+import 'ModalDashboard.dart';
 
 class DashboardScreen extends StatelessWidget {
- DashboardScreen({super.key});
-
-  // Mock data for demonstration
-  final String userName = "Aman Sharma";
-  final DeliveryInfo nextDelivery = DeliveryInfo("Tomorrow, 6:00 AM", "Cow Milk (A2)", 1.0);
-  final double walletBalance = 450.75;
-
-  // List of items in the current subscription
-  final List<DeliveryInfo> subscriptions = [
-    DeliveryInfo("Daily", "Cow Milk (A2)", 1.0),
-    DeliveryInfo("Every Sat/Sun", "Curd 500g", 1.0),
-    DeliveryInfo("Every Tue/Fri", "Paneer 200g", 0.5),
-  ];
-
+  const DashboardScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    return ChangeNotifierProvider(
+      create: (_) => DashboardController(),
+      child: const DashboardView(),
+    );
+  }
+}
+
+class DashboardView extends StatelessWidget {
+  const DashboardView({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final controller = context.watch<DashboardController>();
+
+    // Banner images list
+    final List<String> bannerImages = [
+      'assets/banner.jpg',
+      'assets/banner2.jpg',
+      'assets/banner3.jpg',
+    ];
+
     return Scaffold(
-      backgroundColor: AppColors.grey, // A soft background color
-
-      appBar: _buildAppBar(context),
-
-      body: SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      backgroundColor: Colors.white,
+      body: controller.isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : RefreshIndicator(
+        onRefresh: controller.refresh,
+        child: Stack(
           children: [
-            // 1. Next Delivery Card (Prominent Header)
-            _buildNextDeliveryCard(),
-
-            const SizedBox(height: 16),
-
-            // 2. Quick Action/Wallet Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                children: [
-                  Expanded(child: _buildWalletCard()),
-                  const SizedBox(width: 12),
-                  Expanded(child: _buildQuickActionCard(context)),
-                ],
+            // Background Vector Image
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 180,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/Vector.png'),
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
             ),
 
-            const SizedBox(height: 24),
+            // Main Content with CustomScrollView
+            CustomScrollView(
+              slivers: [
+                // Top Header with Name and Notification
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(10, 34, 20, 0),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.person_outline,
+                                  size: 20,
+                                  color: Colors.grey[800],
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  'Name',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: Colors.grey[800],
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 4),
+                            Row(
+                              children: [
+                                Icon(
+                                  Icons.location_on_outlined,
+                                  size: 18,
+                                  color: Colors.grey[600],
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  'Gomtinagar, Lucknow',
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    color: Colors.grey[600],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                        Stack(
+                          children: [
+                            IconButton(
+                              icon: Icon(
+                                Icons.notifications_outlined,
+                                size: 28,
+                                color: Colors.grey[800],
+                              ),
+                              onPressed: () {
+                                // Navigate to notifications
+                              },
+                            ),
+                            Positioned(
+                              right: 10,
+                              top: 10,
+                              child: Container(
+                                width: 10,
+                                height: 10,
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFF4A90E2),
+                                  shape: BoxShape.circle,
+                                  border: Border.all(
+                                    color: Colors.white,
+                                    width: 2,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
 
-            // 3. Subscription Overview Header
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "My Current Subscription",
-                style: TextConstants.headingStyle.copyWith(fontSize: 18, color: AppColors.advanceColor),
-              ),
+                // Carousel Slider Banner
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(
+                      right: 10,left: 10,top: 60
+                        ),
+                    child: CarouselSlider(
+                      options: CarouselOptions(
+                        height: 150,
+                        autoPlay: true,
+                        autoPlayInterval: const Duration(seconds: 3),
+                        autoPlayAnimationDuration:
+                        const Duration(milliseconds: 800),
+                        autoPlayCurve: Curves.fastOutSlowIn,
+                        enlargeCenterPage: true,
+                        viewportFraction: 0.8,
+                        aspectRatio: 16 / 9,
+                      ),
+                      items: bannerImages.map((imagePath) {
+                        return Builder(
+                          builder: (BuildContext context) {
+                            return Container(
+                              width: MediaQuery.of(context).size.width,
+                              margin: const EdgeInsets.symmetric(
+                                  horizontal: 5.0),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.2),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 5),
+                                  ),
+                                ],
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(20),
+                                child: Image.asset(
+                                  imagePath,
+                                  fit: BoxFit.cover,
+                                  errorBuilder:
+                                      (context, error, stackTrace) {
+                                    return Container(
+                                      decoration: BoxDecoration(
+                                        gradient: const LinearGradient(
+                                          colors: [
+                                            Color(0xFF4A90E2),
+                                            Color(0xFF5BA3F5)
+                                          ],
+                                          begin: Alignment.topLeft,
+                                          end: Alignment.bottomRight,
+                                        ),
+                                        borderRadius:
+                                        BorderRadius.circular(20),
+                                      ),
+                                      child: const Center(
+                                        child: Column(
+                                          mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.local_drink,
+                                              size: 60,
+                                              color: Colors.white,
+                                            ),
+                                            SizedBox(height: 10),
+                                            Text(
+                                              'Fresh Milk',
+                                              style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 24,
+                                                fontWeight:
+                                                FontWeight.bold,
+                                              ),
+                                            ),
+                                            SizedBox(height: 5),
+                                            Text(
+                                              'Delivered Daily',
+                                              style: TextStyle(
+                                                color: Colors.white70,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                              ),
+                            );
+                          },
+                        );
+                      }).toList(),
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(
+                  child: SizedBox(height: 0),
+                ),
+
+                // White content area starts here
+                SliverToBoxAdapter(
+                  child: Container(
+                    decoration: const BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.only(
+                        topLeft: Radius.circular(30),
+                        topRight: Radius.circular(30),
+                      ),
+                    ),
+                    child: const SizedBox(height: 24),
+                  ),
+                ),
+
+                // Best Seller Section Header
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Best Seller',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Most Popular Product',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Best Seller Products
+                SliverToBoxAdapter(
+                  child: Container(
+                    height: 260,
+                    color: Colors.white,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 20, vertical: 16),
+                      itemCount: controller.bestSellerProducts.length,
+                      itemBuilder: (context, index) {
+                        final product =
+                        controller.bestSellerProducts[index];
+                        return ProductCard(product: product);
+                      },
+                    ),
+                  ),
+                ),
+
+                // Categories Section Header
+                SliverToBoxAdapter(
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(20, 24, 20, 16),
+                    color: Colors.white,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Categories',
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black87,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          'Most Popular Product',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[600],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Categories Grid
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  sliver: SliverGrid(
+                    gridDelegate:
+                    const SliverGridDelegateWithFixedCrossAxisCount(
+                      crossAxisCount: 4,
+                      childAspectRatio: 0.8,
+                      crossAxisSpacing: 12,
+                      mainAxisSpacing: 16,
+                    ),
+                    delegate: SliverChildBuilderDelegate(
+                          (context, index) {
+                        final category = controller.categories[index];
+                        return CategoryCard(category: category);
+                      },
+                      childCount: controller.categories.length,
+                    ),
+                  ),
+                ),
+
+                // Freshness Banner
+                SliverToBoxAdapter(
+                  child: Container(
+                    margin: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFF4A90E2).withOpacity(0.08),
+                          const Color(0xFF5BA3F5).withOpacity(0.08),
+                        ],
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                          color:
+                          const Color(0xFF4A90E2).withOpacity(0.2)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Freshness',
+                          style: TextStyle(
+                            fontSize: 26,
+                            fontWeight: FontWeight.bold,
+                            color: Color(0xFF4A90E2),
+                          ),
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Delivered Daily......',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.grey[500],
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          'Quality you can taste,\nfreshness you can feel!',
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: Colors.grey[700],
+                            height: 1.5,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
+              ],
             ),
-            const SizedBox(height: 12),
-
-            // 4. Subscription List
-            ...subscriptions.map((sub) => _buildSubscriptionTile(sub)).toList(),
-
-            const SizedBox(height: 24),
-
-            // 5. Promotional Banners (The beautiful UI element)
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Text(
-                "Special Offers for You",
-                style: TextConstants.headingStyle.copyWith(fontSize: 18, color: Colors.red),
-              ),
-            ),
-            const SizedBox(height: 12),
-            _buildBanners(),
-
-            const SizedBox(height: 40),
           ],
         ),
       ),
     );
   }
+}
 
-  // --- WIDGET BUILDERS ---
+// Product Card Widget
+class ProductCard extends StatelessWidget {
+  final Product product;
 
-  AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      backgroundColor: AppColors.logincolor,
-      elevation: 0,
-      title: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text("Welcome Back,", style: TextConstants.smallTextStyle.copyWith(color: AppColors.white.withOpacity(0.8))),
-          Text(userName, style: TextConstants.headingStyle.copyWith(color: AppColors.white, fontSize: 24)),
-        ],
-      ),
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.notifications_none, color: AppColors.white),
-          onPressed: () {},
-        ),
-        IconButton(
-          icon: const Icon(Icons.account_circle, color: AppColors.white),
-          onPressed: () {},
-        ),
-      ],
-      bottom: PreferredSize(
-        preferredSize: const Size.fromHeight(16.0),
-        child: Container(),
-      ),
-    );
-  }
+  const ProductCard({super.key, required this.product});
 
-  Widget _buildNextDeliveryCard() {
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.only(left: 16, right: 16, top: 16),
-      padding: const EdgeInsets.all(20),
+      width: 140,
+      margin: const EdgeInsets.only(right: 12),
       decoration: BoxDecoration(
-        color: AppColors.logincolor, // Use an accent color for emphasis
-        borderRadius: BorderRadius.circular(15),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: Colors.grey[300]!),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.grey.withOpacity(0.15),
             blurRadius: 10,
-            offset: const Offset(0, 5),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            "Your Next Delivery",
-            style: TextConstants.smallTextStyle.copyWith(color: AppColors.white.withOpacity(0.8)),
-          ),
-          const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    nextDelivery.date,
-                    style: TextConstants.headingStyle.copyWith(color: AppColors.white, fontSize: 20, fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    "${nextDelivery.quantity.toStringAsFixed(1)} Ltr of ${nextDelivery.item}",
-                    style: TextConstants.smallTextStyle.copyWith(color: AppColors.white),
-                  ),
-                ],
-              ),
-              ElevatedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.edit, size: 18),
-                label: const Text("Modify"),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.white,
-                  foregroundColor: AppColors.logincolor,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildWalletCard() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.logincolor),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          const Icon(Icons.account_balance_wallet_outlined, color: AppColors.logincolor),
-          const SizedBox(height: 8),
-          Text("Wallet Balance", style: TextConstants.smallTextStyle.copyWith(color: AppColors.grey)),
-          Text(
-            "₹${walletBalance.toStringAsFixed(2)}",
-            style: TextConstants.headingStyle.copyWith(color: AppColors.logincolor, fontSize: 22),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildQuickActionCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.logincolor.withOpacity(0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppColors.logincolor.withOpacity(0.2)),
-      ),
-      child: InkWell(
-        onTap: () {
-          // Navigate to Add/Pause screen
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Icon(Icons.pause_circle_outline, color: AppColors.logincolor),
-            const SizedBox(height: 8),
-            Text("Need a break?", style: TextConstants.smallTextStyle.copyWith(color: AppColors.grey)),
-            Text(
-              "Pause Delivery",
-              style: TextConstants.headingStyle.copyWith(color: AppColors.logincolor, fontSize: 18),
+          // Product Image
+          Container(
+            height: 40,
+            decoration: BoxDecoration(
+              color: const Color(0xFFF8F9FA),
+              borderRadius:
+              const BorderRadius.vertical(top: Radius.circular(16)),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSubscriptionTile(DeliveryInfo sub) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.white,
-        borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: AppColors.logincolor),
-      ),
-      child: Row(
-        children: [
-          Icon(
-            sub.item.contains("Milk") ? Icons.local_drink : Icons.shopping_basket,
-            color: AppColors.logincolor,
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  sub.item,
-                  style: TextConstants.headingStyle.copyWith(fontSize: 16),
-                ),
-                Text(
-                  sub.date,
-                  style: TextConstants.smallTextStyle.copyWith(color: AppColors.grey),
-                ),
-              ],
+            child: Center(
+              child: Image.asset(
+                product.image,
+                height: 70,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    Icons.local_drink,
+                    size: 50,
+                    color: const Color(0xFF4A90E2),
+                  );
+                },
+              ),
             ),
           ),
-          Text(
-            "${sub.quantity} ${sub.item.contains("Milk") ? 'Ltr' : 'Pcs'}",
-            style: TextConstants.headingStyle.copyWith(color: AppColors.logincolor, fontSize: 16),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBanners() {
-    return SizedBox(
-      height: 150, // Fixed height for the banner area
-      child: PageView(
-        controller: PageController(viewportFraction: 0.9), // Show a bit of the next banner
-        children: [
-          _buildBannerItem(
-            color: const Color(0xFFFDD835), // Yellow
-            title: "50% Off on First Cheese Order!",
-            subtitle: "Try our artisanal cheese range.",
-            icon: Icons.local_dining,
-          ),
-          _buildBannerItem(
-            color: const Color(0xFFC8E6C9), // Light Green
-            title: "Refer & Earn",
-            subtitle: "Invite a friend and get ₹100 credit.",
-            icon: Icons.person_add_alt_1,
-          ),
-          _buildBannerItem(
-            color: const Color(0xFFBBDEFB), // Light Blue
-            title: "Premium Desi Ghee",
-            subtitle: "Limited stock available. Shop now!",
-            icon: Icons.star,
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBannerItem({
-    required Color color,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(right: 12),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(15),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, size: 40, color: AppColors.logincolor),
-          const SizedBox(width: 16),
-          Expanded(
+          Padding(
+            padding: const EdgeInsets.all(10.0),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 Text(
-                  title,
-                  style: TextConstants.headingStyle.copyWith(fontSize: 16, color: AppColors.logincolor, fontWeight: FontWeight.bold),
+                  'Rs.${product.price.toStringAsFixed(0)}',
+                  style: const TextStyle(
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87,
+                  ),
                 ),
+                const SizedBox(height: 4),
                 Text(
-                  subtitle,
-                  style: TextConstants.smallTextStyle.copyWith(color: AppColors.grey),
+                  product.unit,
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: Colors.grey[600],
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4A90E2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Icon(Icons.remove,
+                          color: Colors.white, size: 16),
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      child: const Text(
+                        '1',
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                    Container(
+                      width: 28,
+                      height: 28,
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF4A90E2),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child:
+                      const Icon(Icons.add, color: Colors.white, size: 16),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  width: double.infinity,
+                  height: 30,
+                  child: ElevatedButton(
+                    onPressed: () {
+                      context.read<DashboardController>().addToCart(product);
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A90E2),
+                      padding: EdgeInsets.zero,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                    ),
+                    child: const Text(
+                      'Add',
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.white,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
                 ),
               ],
             ),
@@ -335,5 +552,91 @@ class DashboardScreen extends StatelessWidget {
         ],
       ),
     );
+  }
+}
+
+// Category Card Widget
+class CategoryCard extends StatelessWidget {
+  final Category category;
+
+  const CategoryCard({super.key, required this.category});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        // Navigate to category details
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            width: 70,
+            height: 70,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: Colors.grey[300]!),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.grey.withOpacity(0.1),
+                  blurRadius: 8,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: Center(
+              child: Image.asset(
+                category.image,
+                height: 45,
+                fit: BoxFit.contain,
+                errorBuilder: (context, error, stackTrace) {
+                  return Icon(
+                    _getCategoryIcon(category.name),
+                    size: 36,
+                    color: const Color(0xFF4A90E2),
+                  );
+                },
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            category.name,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+              color: Colors.black87,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
+
+  IconData _getCategoryIcon(String name) {
+    switch (name.toLowerCase()) {
+      case 'milk':
+        return Icons.local_drink;
+      case 'curd':
+        return Icons.soup_kitchen;
+      case 'butter':
+        return Icons.breakfast_dining;
+      case 'ghee':
+        return Icons.oil_barrel;
+      case 'chaas':
+        return Icons.liquor;
+      case 'cheese':
+        return Icons.food_bank;
+      case 'paneer':
+        return Icons.square;
+      case 'khoa':
+        return Icons.cookie;
+      default:
+        return Icons.category;
+    }
   }
 }

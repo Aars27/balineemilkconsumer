@@ -1,3 +1,4 @@
+import 'package:consumerbalinee/Features/ViewScreens/DashBoardScreen/ControllerDashboard.dart';
 import 'package:consumerbalinee/Features/ViewScreens/OnboardingScreen/OnBoardingController/Onbarding_Controller.dart';
 import 'package:consumerbalinee/Features/ViewScreens/SplashScreen/SplashController/SplashController.dart';
 import 'package:flutter/material.dart';
@@ -20,6 +21,8 @@ class Mainproviders extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginController()),
         ChangeNotifierProvider(create: (_) => SignupController()),
         ChangeNotifierProvider(create: (_) => OtpController()),
+        ChangeNotifierProvider(create: (_) => DashboardController()),
+
 
 
 

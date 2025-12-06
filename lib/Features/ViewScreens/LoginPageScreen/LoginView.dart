@@ -1,3 +1,4 @@
+import 'package:consumerbalinee/Core/Constant/text_constants.dart';
 import 'package:consumerbalinee/Features/ViewScreens/SignupScreen/SignupScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -15,7 +16,7 @@ class LoginScreen extends StatelessWidget {
     final controller = context.watch<LoginController>();
 
     return Scaffold(
-      backgroundColor: AppColors.logincolor,                  // Soft milky background
+      backgroundColor: AppColors.logincolor ,                // Soft milky background
       body: SingleChildScrollView(
         child: Column(
           children: [
@@ -27,10 +28,7 @@ class LoginScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 60, bottom: 20),
               child: Column(
                 children: [
-                  Image.asset(
-                    "assets/milk.gif", // ADD this image
-                    height: 180,
-                  ),
+                  Image.asset('assets/Balinee-milk.gif',width: 200,),
                   const SizedBox(height: 10),
                   const Text(
                     "Welcome to Balinee Milk",
@@ -165,7 +163,7 @@ class LoginScreen extends StatelessWidget {
 
 
 
-                      child: Text('Click to Signup')))
+                      child: Text('Click to Signup',style: TextConstants.subHeadingStyle.copyWith(color: AppColors.gradientEnd))))
                 ],
               ),
             ),
