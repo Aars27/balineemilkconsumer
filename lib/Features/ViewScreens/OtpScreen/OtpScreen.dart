@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:pinput/pinput.dart';
 import 'package:provider/provider.dart';
 
+import '../../../Core/Constant/app_colors.dart';
 import 'OtpController.dart';
 
 class OtpScreen extends StatelessWidget {
@@ -43,7 +44,7 @@ class OtpScreen extends StatelessWidget {
                 child: Icon(
                   Icons.lock_outline_rounded,
                   size: 100,
-                  color: const Color(0xFF4A90E2),
+                  color: AppColors.gradientEnd,
                 ),
               ),
             ),
@@ -182,7 +183,7 @@ class OtpScreen extends StatelessWidget {
                  context.go('/bottombar');
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4A90E2),
+                  backgroundColor: AppColors.gradientEnd,
                   foregroundColor: Colors.white,
                   elevation: 0,
                   shape: RoundedRectangleBorder(

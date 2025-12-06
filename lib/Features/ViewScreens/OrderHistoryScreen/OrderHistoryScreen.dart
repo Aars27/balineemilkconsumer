@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
+import '../../../Core/Constant/app_colors.dart';
+
 
 
 class Order {
@@ -138,9 +140,14 @@ class Orderhistoryscreen extends StatelessWidget {
   }
 }
 
-class OrderHistoryView extends StatelessWidget {
+class OrderHistoryView extends StatefulWidget {
   const OrderHistoryView({super.key});
 
+  @override
+  State<OrderHistoryView> createState() => _OrderHistoryViewState();
+}
+
+class _OrderHistoryViewState extends State<OrderHistoryView> {
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<OrderHistoryController>();
@@ -266,16 +273,16 @@ class OrderHistoryView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFDB64E) : Colors.white,
+          color: isSelected ? AppColors.gradientEnd : Colors.white,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFDB64E) : Colors.grey[300]!,
+            color: isSelected ? AppColors.gradientEnd : Colors.grey[300]!,
             width: 1.5,
           ),
           boxShadow: isSelected
               ? [
             BoxShadow(
-              color: const Color(0xFFFDB64E).withOpacity(0.3),
+              color: AppColors.gradientEnd.withOpacity(0.3),
               blurRadius: 8,
               offset: const Offset(0, 4),
             ),
@@ -318,10 +325,10 @@ class OrderHistoryView extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFDB64E) : Colors.white,
+          color: isSelected ? AppColors.gradientEnd : Colors.white,
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFDB64E) : Colors.grey[300]!,
+            color: isSelected ? AppColors.gradientEnd : Colors.grey[300]!,
             width: 1.5,
           ),
         ),
@@ -481,7 +488,7 @@ class OrderCard extends StatelessWidget {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Color(0xFFFDB64E),
+                      color: AppColors.gradientEnd,
                     ),
                   ),
                 ],
@@ -491,7 +498,7 @@ class OrderCard extends StatelessWidget {
                   context.read<OrderHistoryController>().reorder(order.id);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFFDB64E),
+                  backgroundColor: AppColors.gradientEnd,
                   foregroundColor: Colors.white,
                   padding:
                   const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
