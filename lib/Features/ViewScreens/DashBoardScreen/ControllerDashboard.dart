@@ -1,138 +1,125 @@
 import 'package:flutter/material.dart';
-
-import 'ModalDashboard.dart';
-// import 'package:http/http.dart' as http; // Uncomment when using API
+import 'package:provider/provider.dart';
+import '../../../Components/Location/Location.dart';
+import '../../../Components/Savetoken/utils_local_storage.dart';
+import '../../../Core/Constant/ApiServices.dart';
+import 'Bannermodal/BannerModal.dart';
+import 'BestSellerModal/Best_Sellar_Modal.dart';
+import 'CategoryModal/CategoryModal.dart';
 
 class DashboardController extends ChangeNotifier {
-  List<BannerModel> _banners = [];
-  List<Product> _bestSellerProducts = [];
-  List<Category> _categories = [];
-  bool _isLoading = false;
-  int _cartCount = 0;
+  bool isLoading = false;
 
-  List<BannerModel> get banners => _banners;
-  List<Product> get bestSellerProducts => _bestSellerProducts;
-  List<Category> get categories => _categories;
-  bool get isLoading => _isLoading;
-  int get cartCount => _cartCount;
+  List<BannerModel> banners = [];
+  List<BestSellerModel> bestSellerProducts = [];
+  List<CategoryModel> categories = [];
 
-  DashboardController() {
-    loadData();
-  }
+  String userName = "User";
+  String locationName = "Fetching...";
 
-  // Load all data from API
-  Future<void> loadData() async {
-    _isLoading = true;
+  // --------------------------------------------------
+  // LOAD DASHBOARD DATA
+  // --------------------------------------------------
+  Future<void> loadDashboard(BuildContext context) async {
+    isLoading = true;
     notifyListeners();
 
     try {
-      // Simulate API calls - Replace with actual API endpoints
-      await Future.wait([
-        _loadBanners(),
-        _loadBestSellers(),
-        _loadCategories(),
+      // 🔍 CHECK TOKEN FIRST
+      final token = await LocalStorage.getToken();
+      print("\n🔐 TOKEN STATUS BEFORE API CALLS:");
+      print("Token exists: ${token != null}");
+      print("Token empty: ${token?.isEmpty ?? true}");
+      if (token != null && token.isNotEmpty) {
+        print("Token length: ${token.length}");
+        print("Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...");
+      } else {
+        print("⚠️ NO TOKEN FOUND - API calls will fail!");
+        print("Please make sure user is logged in first.\n");
+      }
+
+      final api = ApiService();
+
+      // Fetch all data in parallel for better performance
+      final results = await Future.wait([
+        api.getBanners(),
+        api.getCategories(),
+        api.getBestSellers(),
       ]);
+
+      banners = results[0] as List<BannerModel>;
+      categories = results[1] as List<CategoryModel>;
+      bestSellerProducts = results[2] as List<BestSellerModel>;
+
+      // Load user details and location
+      await _loadUserDetails();
+      await _loadLocation(context);
+
+      print("✅ Dashboard loaded successfully");
+      print("Banners: ${banners.length}");
+      print("Categories: ${categories.length}");
+      print("Best Sellers: ${bestSellerProducts.length}");
+
     } catch (e) {
-      print('Error loading data: $e');
-    } finally {
-      _isLoading = false;
-      notifyListeners();
+      print("❌ Dashboard Load Error: $e");
+
+      // Set empty lists to prevent null errors
+      banners = [];
+      categories = [];
+      bestSellerProducts = [];
     }
-  }
 
-  // Load banners from API
-  Future<void> _loadBanners() async {
-    // TODO: Replace with actual API call
-    // final response = await http.get(Uri.parse('YOUR_API_URL/banners'));
-    // final data = jsonDecode(response.body);
-    // _banners = (data as List).map((json) => BannerModel.fromJson(json)).toList();
-
-    // Dummy data
-    await Future.delayed(const Duration(milliseconds: 300));
-    _banners = [
-      BannerModel(
-        id: '1',
-        image: 'assets/milk_banner.png', // Replace with API image URL
-        title: 'Milk',
-        subtitle: 'Fresh & Pure Daily',
-      ),
-    ];
-  }
-
-  // Load best seller products from API
-  Future<void> _loadBestSellers() async {
-    // TODO: Replace with actual API call
-    // final response = await http.get(Uri.parse('YOUR_API_URL/products/bestsellers'));
-    // final data = jsonDecode(response.body);
-    // _bestSellerProducts = (data as List).map((json) => Product.fromJson(json)).toList();
-
-    // Dummy data
-    await Future.delayed(const Duration(milliseconds: 500));
-    _bestSellerProducts = [
-      Product(
-        id: '1',
-        name: 'Full Cream Milk',
-        image: 'assets/milk_pack.png',
-        price: 35,
-        unit: '500ml',
-        isBestSeller: true,
-      ),
-      Product(
-        id: '2',
-        name: 'Toned Milk',
-        image: 'assets/milk_pack.png',
-        price: 35,
-        unit: '500ml',
-        isBestSeller: true,
-      ),
-      Product(
-        id: '3',
-        name: 'Organic Milk',
-        image: 'assets/milk_pack.png',
-        price: 35,
-        unit: '500ml',
-        isBestSeller: true,
-      ),
-    ];
-  }
-
-  // Load categories from API
-  Future<void> _loadCategories() async {
-    // TODO: Replace with actual API call
-    // final response = await http.get(Uri.parse('YOUR_API_URL/categories'));
-    // final data = jsonDecode(response.body);
-    // _categories = (data as List).map((json) => Category.fromJson(json)).toList();
-
-    // Dummy data
-    await Future.delayed(const Duration(milliseconds: 500));
-    _categories = [
-      Category(id: '1', name: 'Milk', image: 'assets/categories/milk.png'),
-      Category(id: '2', name: 'Curd', image: 'assets/categories/curd.png'),
-      Category(id: '3', name: 'Butter', image: 'assets/categories/butter.png'),
-      Category(id: '4', name: 'Ghee', image: 'assets/categories/ghee.png'),
-      Category(id: '5', name: 'Chaas', image: 'assets/categories/chaas.png'),
-      Category(id: '6', name: 'Cheese', image: 'assets/categories/cheese.png'),
-      Category(id: '7', name: 'Paneer', image: 'assets/categories/paneer.png'),
-      Category(id: '8', name: 'Khoa', image: 'assets/categories/khoa.png'),
-    ];
-  }
-
-  void addToCart(Product product) {
-    _cartCount++;
+    isLoading = false;
     notifyListeners();
-    // TODO: Call API to add to cart
   }
 
-  void removeFromCart(Product product) {
-    if (_cartCount > 0) {
-      _cartCount--;
-      notifyListeners();
+  // --------------------------------------------------
+  // REFRESH
+  // --------------------------------------------------
+  Future<void> refresh(BuildContext context) async {
+    await loadDashboard(context);
+  }
+
+  // --------------------------------------------------
+  // LOAD USER DATA FROM LOCAL STORAGE
+  // --------------------------------------------------
+  Future<void> _loadUserDetails() async {
+    try {
+      final user = await LocalStorage.getUserData();
+
+      if (user != null && user.fullName != null) {
+        userName = user.fullName!;
+      } else {
+        userName = "User";
+      }
+
+      print("👤 User: $userName");
+    } catch (e) {
+      print("❌ Error loading user details: $e");
+      userName = "User";
     }
-    // TODO: Call API to remove from cart
+
+    notifyListeners();
   }
 
-  // Refresh data
-  Future<void> refresh() async {
-    await loadData();
+  // --------------------------------------------------
+  // LOAD LOCATION FROM PROVIDER
+  // --------------------------------------------------
+  Future<void> _loadLocation(BuildContext context) async {
+    try {
+      final locationProvider =
+      Provider.of<LocationProvider>(context, listen: false);
+
+      await locationProvider.fetchLocation();
+
+      locationName = locationProvider.currentAddress;
+
+      print("📍 Location: $locationName");
+    } catch (e) {
+      print("❌ Error loading location: $e");
+      locationName = "Location unavailable";
+    }
+
+    notifyListeners();
   }
 }

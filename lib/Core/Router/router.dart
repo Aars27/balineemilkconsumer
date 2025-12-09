@@ -1,39 +1,38 @@
-// lib/Core/Router/Router.dart
+import 'package:consumerbalinee/Components/Savetoken/utils_local_storage.dart';
 import "package:consumerbalinee/Features/ViewScreens/LoginPageScreen/LoginView.dart";
 import "package:consumerbalinee/Features/ViewScreens/OnboardingScreen/Onboarding_Screen.dart";
 import "package:consumerbalinee/Features/ViewScreens/SplashScreen/SplashView/SplashScreen.dart";
 import "package:go_router/go_router.dart";
-
-import "../../Components/Savetoken/SaveToken.dart";
 import "../../Features/NotificationScreen/NotificationScreen.dart";
-// import "../../Features/ViewScreens/SplashScreen/ViewScreens.dart";
-// import "../../Features/ViewScreens/LoginScreen/LoginScreen.dart";
 import "../../Features/BottomPage/BootamPage.dart";
-
 
 final GoRouter AppRouter = GoRouter(
   initialLocation: '/',
 
-  //  Global redirect logic for auto-login
+  // ✅ AUTO LOGIN LOGIC
   redirect: (context, state) async {
-    // final isLoggedIn = await TokenHelper().isLoggedIn();
-
-    // Allow splash screen always
+    // Always allow splash screen
     if (state.matchedLocation == '/') {
       return null;
     }
 
-    // If logged in, don't allow login page
-    // if (state.matchedLocation == '/loginpage' && isLoggedIn) {
-    //   return '/bottombar';
-    // }
+    // ✅ Check if user is logged in
+    final token = await LocalStorage.getToken();
+    final isLoggedIn = token != null && token.isNotEmpty;
 
-    // If not logged in, redirect to login (except splash)
-    // if (!isLoggedIn &&
-    //     state.matchedLocation != '/' &&
-    //     state.matchedLocation != '/loginpage') {
-    //   return '/loginpage';
-    // }
+    // If logged in and trying to access login/onboarding, redirect to dashboard
+    if (isLoggedIn &&
+        (state.matchedLocation == '/loginpage' ||
+            state.matchedLocation == '/onboarding')) {
+      return '/bottombar';
+    }
+
+    // If not logged in and trying to access protected routes
+    if (!isLoggedIn &&
+        state.matchedLocation != '/loginpage' &&
+        state.matchedLocation != '/onboarding') {
+      return '/loginpage';
+    }
 
     return null; // Allow navigation
   },

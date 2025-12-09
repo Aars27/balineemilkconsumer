@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../../Core/Constant/ApiServices.dart';
 import 'SignupModal.dart';
 
@@ -7,32 +8,26 @@ class SignupController extends ChangeNotifier {
   final mobileController = TextEditingController();
   final addressController = TextEditingController();
 
-  int selectedRole = 3; // consumer
+  int selectedRole = 3; // default Consumer
   bool isLoading = false;
 
-  // --------------------------
-  // Change selected user type
-  // --------------------------
   void updateRole(int role) {
     selectedRole = role;
     notifyListeners();
   }
 
-  // --------------------------
-  // SEND SIGNUP REQUEST
-  // --------------------------
   Future<void> createAccount(BuildContext context) async {
     final fullName = nameController.text.trim();
     final mobile = mobileController.text.trim();
     final address = addressController.text.trim();
 
     if (fullName.isEmpty || mobile.isEmpty || address.isEmpty) {
-      _showMsg(context, "All fields are required");
+      _msg(context, "All fields are required");
       return;
     }
 
     if (mobile.length != 10) {
-      _showMsg(context, "Enter valid 10-digit mobile number");
+      _msg(context, "Enter valid 10-digit number");
       return;
     }
 
@@ -40,39 +35,54 @@ class SignupController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // split first + last name
-      List<String> names = fullName.split(" ");
-      String firstName = names.first;
-      String lastName = names.length > 1 ? names.sublist(1).join(" ") : "";
+      List<String> nameParts = fullName.split(" ");
+      String firstName = nameParts.first;
+      String lastName =
+      nameParts.length > 1 ? nameParts.sublist(1).join(" ") : "";
 
-      final request = SignupRequest(
-        firstName: firstName,
-        lastName: lastName,
-        mobileNo: mobile,
-        roleId: selectedRole,
-        address: address,
-      );
+      // Create request map directly
+      final requestData = {
+        "first_name": firstName,
+        "last_name": lastName,
+        "mobile_no": mobile,
+        "role_id": selectedRole,
+        "address": address,
+      };
 
-      SignupResponse response = await ApiService().signup(request);
+      // Call API and get Map response
+      final responseData = await ApiService().signup(requestData);
+
+      // Convert to SignupResponse model
+      final response = SignupResponse.fromJson(responseData);
 
       if (response.flag) {
-        _showMsg(context, response.message);
+        _msg(context, response.message);
 
-        // Navigate next (example)
-        // Navigator.pushNamed(context, "/otp");
+        // NEXT STEP → Go to OTP page
+        // Navigator.pushNamed(context, "/otp", arguments: mobile);
+        context.go('/login');
       } else {
-        _showMsg(context, response.message);
+        _msg(context, response.message);
       }
     } catch (e) {
-      _showMsg(context, "Error: $e");
+      _msg(context, "Error: $e");
     }
 
     isLoading = false;
     notifyListeners();
   }
 
-  void _showMsg(BuildContext context, String msg) {
+  void _msg(BuildContext context, String msg) {
     ScaffoldMessenger.of(context)
         .showSnackBar(SnackBar(content: Text(msg)));
   }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    mobileController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
 }
+

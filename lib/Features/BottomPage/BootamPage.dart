@@ -1,20 +1,19 @@
-import 'package:consumerbalinee/Features/NotificationScreen/NotificationScreen.dart';
-import 'package:consumerbalinee/Features/ViewScreens/CartScreen/CartScreen.dart';
 import 'package:consumerbalinee/Features/ViewScreens/DailyOrderScreen/DailyOrderScreen.dart';
-import 'package:consumerbalinee/Features/ViewScreens/OrderHistoryScreen/OrderHistoryScreen.dart';
 import 'package:consumerbalinee/Features/ViewScreens/ProfileScreen/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Core/Constant/app_colors.dart';
+import '../ViewScreens/CartScreen/CartProvider.dart';
 import '../ViewScreens/DashBoardScreen/DashboardScreeen.dart';
+import '../ViewScreens/OrderHistoryScreen/OrderHistoryProvider.dart';
 import 'MainNavigator.dart';
 
 class MainWrapperScreen extends StatelessWidget {
   MainWrapperScreen({super.key});
 
   final List<Widget> _screens = [
-    DashboardScreen(), // Your dashboard screen
+    DashboardView(), // Your dashboard screen
     DailyOrderView(), // Create this screen
     Cartscreen(), // Create this screen
     Orderhistoryscreen(), // Create this screen

@@ -1,6 +1,5 @@
 // Inside OnboardingController.dart (or equivalent)
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 
 import '../OnboardingModal/onboarding_modal.dart';

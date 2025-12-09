@@ -1,23 +1,22 @@
 import 'package:flutter/material.dart';
-
+import '../../../Auth/Firebase_service.dart';
 import '../../../Components/Savetoken/utils_local_storage.dart';
 import '../../../Core/Constant/ApiServices.dart';
+import '../OtpScreen/OtpScreen.dart';
 import 'loginModal.dart';
 
 class LoginController extends ChangeNotifier {
   final mobileController = TextEditingController();
   bool isLoading = false;
+  final FirebaseService _firebaseService = FirebaseService();
 
   Future<void> sendOtp(BuildContext context) async {
     final mobile = mobileController.text.trim();
 
-    // ----------------------------
-    // VALIDATION
-    // ----------------------------
+
+    // ------------------ VALIDATION ------------------
     if (mobile.length != 10) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Enter valid 10-digit mobile number")),
-      );
+      _msg(context, "Enter valid 10-digit mobile number");
       return;
     }
 
@@ -25,42 +24,52 @@ class LoginController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      // ----------------------------
-      // API CALL
-      // ----------------------------
-      final data = await ApiService().requestOtp(mobile);
+      // ------------------ FCM TOKEN ------------------
+      String? fcmToken = await _firebaseService.getFCMToken();
+      if (fcmToken != null) {
+        await LocalStorage.saveFCMToken(fcmToken);
+      }
 
-      // Convert response to model
+      // ------------------ HIT LOGIN API ------------------
+      final data = await ApiService().requestOtp(mobile);
       final response = LoginResponse.fromJson(data);
 
-      // ----------------------------
-      // SUCCESS RESPONSE
-      // ----------------------------
+      print("LOGIN RESPONSE USER ID => ${response.userId}");
+
       if (response.flag) {
-        // Save userId in local storage
+        // ------------------ SAVE USER ID ------------------
         await LocalStorage.saveUserId(response.userId);
+        print("SAVED USER ID => ${response.userId}");
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message)),
-        );
+        _msg(context, response.message);
 
-        // TODO: Navigate to OTP screen after creating it
-        // Navigator.pushNamed(context, "/otp");
+        // ------------------ NAVIGATE OTP SCREEN ------------------
+        if (context.mounted) {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => OtpScreen(mobile: mobile),
+            ),
+          );
+        }
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(response.message)),
-        );
+        _msg(context, response.message);
       }
     } catch (e) {
-      // ----------------------------
-      // ERROR HANDLING
-      // ----------------------------
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Error: $e")),
-      );
+      _msg(context, "Error: $e");
     }
 
     isLoading = false;
     notifyListeners();
+  }
+
+  void _msg(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+  }
+
+  @override
+  void dispose() {
+    mobileController.dispose();
+    super.dispose();
   }
 }

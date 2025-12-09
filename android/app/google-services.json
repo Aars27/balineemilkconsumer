@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "468721536982",
+    "project_id": "balineeconsumer",
+    "storage_bucket": "balineeconsumer.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:468721536982:android:2ec69e29f1a9dd13da9e77",
+        "android_client_info": {
+          "package_name": "com.consumerbalinee.consumerbalinee"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBRrwA_t29uWA4ej2LfvY3tFMc9KGpuU3o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

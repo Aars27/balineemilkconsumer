@@ -1,3 +1,4 @@
+// ================= REQUEST MODEL (Keep as is) =================
 class SignupRequest {
   final String firstName;
   final String lastName;
@@ -24,26 +25,23 @@ class SignupRequest {
   }
 }
 
-// -----------------------------
-// RESPONSE MODEL
-// -----------------------------
+// ================= RESPONSE MODEL (Add this if missing) =================
 class SignupResponse {
   final bool flag;
   final String message;
-  final int userId;
+  final Map<String, dynamic>? data;
 
   SignupResponse({
     required this.flag,
     required this.message,
-    required this.userId,
+    this.data,
   });
 
   factory SignupResponse.fromJson(Map<String, dynamic> json) {
     return SignupResponse(
-      flag: json["flag"] ?? false,
-      message: json["message"] ?? "",
-      userId: json["user_id"] ?? 0,
+      flag: json['flag'] ?? false,
+      message: json['message'] ?? 'Unknown error',
+      data: json['data'],
     );
   }
 }
-

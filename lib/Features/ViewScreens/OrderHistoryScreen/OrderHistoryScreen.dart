@@ -1,144 +1,11 @@
 import 'package:flutter/material.dart';
-
-// ==================== VIEW ====================
-import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Core/Constant/app_colors.dart';
+import 'OrderHistoryController.dart';
+import 'OrderHistoryModal.dart';
 
-
-
-class Order {
-  final String id;
-  final String orderNumber;
-  final DateTime date;
-  final List<OrderItem> items;
-  final double totalAmount;
-  final String status; // 'delivered', 'pending', 'cancelled'
-
-  Order({
-    required this.id,
-    required this.orderNumber,
-    required this.date,
-    required this.items,
-    required this.totalAmount,
-    required this.status,
-  });
-}
-
-class OrderItem {
-  final String name;
-  final int quantity;
-  final double price;
-
-  OrderItem({
-    required this.name,
-    required this.quantity,
-    required this.price,
-  });
-}
-
-// ==================== CONTROLLER ====================
-class OrderHistoryController extends ChangeNotifier {
-  String _selectedTab = 'Past Orders'; // 'Past Orders' or 'Daily Orders'
-  String _selectedFilter = 'All'; // 'All', 'Pending', 'Delivered'
-  List<Order> _orders = [];
-  bool _isLoading = false;
-
-  String get selectedTab => _selectedTab;
-  String get selectedFilter => _selectedFilter;
-  List<Order> get orders => _orders;
-  bool get isLoading => _isLoading;
-
-  OrderHistoryController() {
-    loadOrders();
-  }
-
-  Future<void> loadOrders() async {
-    _isLoading = true;
-    notifyListeners();
-
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    _orders = [
-      Order(
-        id: '1',
-        orderNumber: '#234567',
-        date: DateTime(2024, 11, 29),
-        items: [
-          OrderItem(name: 'Fresh Cow Milk', quantity: 2, price: 120),
-          OrderItem(name: 'Premium Curd', quantity: 1, price: 50),
-        ],
-        totalAmount: 170,
-        status: 'delivered',
-      ),
-      Order(
-        id: '2',
-        orderNumber: '#134567',
-        date: DateTime(2024, 11, 25),
-        items: [
-          OrderItem(name: 'Fresh Paneer', quantity: 1, price: 80),
-          OrderItem(name: 'Pure Ghee', quantity: 1, price: 600),
-        ],
-        totalAmount: 680,
-        status: 'delivered',
-      ),
-      Order(
-        id: '3',
-        orderNumber: '#034567',
-        date: DateTime(2024, 11, 22),
-        items: [
-          OrderItem(name: 'White Butter', quantity: 2, price: 240),
-          OrderItem(name: 'Buffalo Milk', quantity: 1, price: 70),
-        ],
-        totalAmount: 310,
-        status: 'delivered',
-      ),
-    ];
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  void setTab(String tab) {
-    _selectedTab = tab;
-    notifyListeners();
-  }
-
-  void setFilter(String filter) {
-    _selectedFilter = filter;
-    notifyListeners();
-  }
-
-  List<Order> get filteredOrders {
-    if (_selectedFilter == 'All') return _orders;
-    return _orders
-        .where((order) =>
-    order.status.toLowerCase() == _selectedFilter.toLowerCase())
-        .toList();
-  }
-
-  void reorder(String orderId) {
-    // Implement reorder logic
-    print('Reordering: $orderId');
-  }
-}
-
-
-
-class Orderhistoryscreen extends StatelessWidget {
-  const Orderhistoryscreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => OrderHistoryController(),
-      child: const OrderHistoryView(),
-    );
-  }
-}
 
 class OrderHistoryView extends StatefulWidget {
   const OrderHistoryView({super.key});
@@ -178,19 +45,22 @@ class _OrderHistoryViewState extends State<OrderHistoryView> {
               children: [
                 // Header
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 20, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                   child: Row(
                     children: [
                       Text(
                         'Order History',
                         style: TextStyle(
-                          fontSize: 24,
+                          fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.grey[800],
                         ),
                       ),
                     ],
                   ),
+                ),
+                SizedBox(
+                  height: 70,
                 ),
 
                 // Tab Buttons

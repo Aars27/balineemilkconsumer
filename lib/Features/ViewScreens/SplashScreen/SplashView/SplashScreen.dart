@@ -2,7 +2,9 @@ import 'package:consumerbalinee/Core/Constant/app_colors.dart';
 import 'package:consumerbalinee/Core/Constant/text_constants.dart';
 import 'package:consumerbalinee/Features/ViewScreens/SplashScreen/SplashController/SplashController.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import '../../../../Components/Savetoken/utils_local_storage.dart';
 import '../../../../Core/Constant/app_images.dart';
 
 class Splashscreen extends StatefulWidget {
@@ -15,13 +17,35 @@ class Splashscreen extends StatefulWidget {
 class _SplashscreenState extends State<Splashscreen> {
   @override
 
-  void initState(){
+  void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_){
-      context.read<SplashController>().navigate(context);
-    });
+    _navigate();
   }
 
+  Future<void> _navigate() async {
+    // Wait for 2 seconds
+    await Future.delayed(const Duration(seconds: 2));
+
+    if (!mounted) return;
+
+    // ✅ Check if user is logged in
+    final token = await LocalStorage.getToken();
+    final isLoggedIn = token != null && token.isNotEmpty;
+
+    print("\n🔍 SPLASH SCREEN - TOKEN CHECK:");
+    print("Is Logged In: $isLoggedIn");
+    print("Token: ${token ?? 'NULL'}\n");
+
+    if (isLoggedIn) {
+      // ✅ Token exists - Go to dashboard
+      context.go('/bottombar');
+    } else {
+      // ❌ No token - Go to onboarding/login
+      context.go('/onboarding');
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(

@@ -1,157 +1,12 @@
 import 'package:flutter/material.dart';
 
 // ==================== VIEW ====================
-import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import 'CartController.dart';
+import 'CartModal.dart';
 
 
-class CartItem {
-  final String id;
-  final String productName;
-  final String productImage;
-  final double price;
-  int quantity;
-  final String unit;
-  final String category;
-
-  CartItem({
-    required this.id,
-    required this.productName,
-    required this.productImage,
-    required this.price,
-    required this.quantity,
-    required this.unit,
-    required this.category,
-  });
-
-  double get totalPrice => price * quantity;
-}
-
-// ==================== CONTROLLER ====================
-class CartController extends ChangeNotifier {
-  List<CartItem> _cartItems = [];
-  bool _isLoading = false;
-  String _promoCode = '';
-  double _discount = 0;
-
-  List<CartItem> get cartItems => _cartItems;
-  bool get isLoading => _isLoading;
-  String get promoCode => _promoCode;
-  double get discount => _discount;
-
-  CartController() {
-    loadCart();
-  }
-
-  Future<void> loadCart() async {
-    _isLoading = true;
-    notifyListeners();
-
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
-
-    _cartItems = [
-      CartItem(
-        id: '1',
-        productName: 'Full Cream Milk',
-        productImage: 'assets/milk_pack.png',
-        price: 35,
-        quantity: 2,
-        unit: '500ml',
-        category: 'Milk',
-      ),
-      CartItem(
-        id: '2',
-        productName: 'Fresh Curd',
-        productImage: 'assets/curd.png',
-        price: 40,
-        quantity: 1,
-        unit: '400g',
-        category: 'Dairy',
-      ),
-      CartItem(
-        id: '3',
-        productName: 'Pure Ghee',
-        productImage: 'assets/ghee.png',
-        price: 550,
-        quantity: 1,
-        unit: '500g',
-        category: 'Dairy',
-      ),
-    ];
-
-    _isLoading = false;
-    notifyListeners();
-  }
-
-  void increaseQuantity(String itemId) {
-    final index = _cartItems.indexWhere((item) => item.id == itemId);
-    if (index != -1) {
-      _cartItems[index].quantity++;
-      notifyListeners();
-    }
-  }
-
-  void decreaseQuantity(String itemId) {
-    final index = _cartItems.indexWhere((item) => item.id == itemId);
-    if (index != -1 && _cartItems[index].quantity > 1) {
-      _cartItems[index].quantity--;
-      notifyListeners();
-    }
-  }
-
-  void removeItem(String itemId) {
-    _cartItems.removeWhere((item) => item.id == itemId);
-    notifyListeners();
-  }
-
-  void applyPromoCode(String code) {
-    _promoCode = code;
-    // Simulate promo code validation
-    if (code.toUpperCase() == 'MILK10') {
-      _discount = subtotal * 0.1; // 10% discount
-    } else if (code.toUpperCase() == 'SAVE20') {
-      _discount = 20;
-    } else {
-      _discount = 0;
-    }
-    notifyListeners();
-  }
-
-  void clearCart() {
-    _cartItems.clear();
-    notifyListeners();
-  }
-
-  double get subtotal {
-    return _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
-  }
-
-  double get deliveryFee => subtotal > 200 ? 0 : 20;
-
-  double get total => subtotal + deliveryFee - discount;
-
-  int get itemCount => _cartItems.length;
-
-  int get totalQuantity {
-    return _cartItems.fold(0, (sum, item) => sum + item.quantity);
-  }
-}
-
-
-
-class Cartscreen extends StatelessWidget {
-  const Cartscreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CartController(),
-      child: const CartView(),
-    );
-  }
-}
 
 class CartView extends StatelessWidget {
   const CartView({super.key});
@@ -186,24 +41,16 @@ class CartView extends StatelessWidget {
               // Custom App Bar
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.fromLTRB(10, 20, 20, 20),
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                   child: Row(
                     children: [
-                      IconButton(
-                        icon: Icon(
-                          Icons.arrow_back_ios,
-                          color: Colors.grey[800],
-                        ),
-                        onPressed: () => Navigator.pop(context),
-                      ),
-                      const SizedBox(width: 8),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'My Cart',
                             style: TextStyle(
-                              fontSize: 24,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: Colors.grey[800],
                             ),
@@ -318,11 +165,6 @@ class CartView extends StatelessWidget {
 
           const SizedBox(height: 24),
 
-          // Promo Code Section
-          _buildPromoCodeSection(context, controller),
-
-          const SizedBox(height: 24),
-
           // Bill Summary
           _buildBillSummary(context, controller),
 
@@ -332,55 +174,6 @@ class CartView extends StatelessWidget {
     );
   }
 
-  Widget _buildPromoCodeSection(
-      BuildContext context, CartController controller) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Icon(
-            Icons.local_offer_outlined,
-            color: const Color(0xFF4A90E2),
-            size: 24,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: TextField(
-              decoration: InputDecoration(
-                hintText: 'Enter promo code',
-                hintStyle: TextStyle(color: Colors.grey[400]),
-                border: InputBorder.none,
-              ),
-              onSubmitted: (value) => controller.applyPromoCode(value),
-            ),
-          ),
-          TextButton(
-            onPressed: () {
-              // Apply promo code logic
-            },
-            child: const Text(
-              'Apply',
-              style: TextStyle(
-                color: Color(0xFF4A90E2),
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _buildBillSummary(BuildContext context, CartController controller) {
     return Container(

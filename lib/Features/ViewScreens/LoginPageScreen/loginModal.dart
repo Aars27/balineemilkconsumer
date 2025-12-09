@@ -11,9 +11,9 @@ class LoginResponse {
 
   factory LoginResponse.fromJson(Map<String, dynamic> json) {
     return LoginResponse(
-      flag: json['flag'] ?? false,
-      message: json['message'] ?? '',
-      userId: json['data'] ?? 0,
+      flag: json["flag"] ?? false,
+      message: json["message"] ?? "",
+      userId: json["user_id"] ?? 0,  // FIXED here
     );
   }
 }

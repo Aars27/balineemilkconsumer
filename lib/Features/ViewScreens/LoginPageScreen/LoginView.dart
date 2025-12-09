@@ -4,7 +4,6 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Core/Constant/app_colors.dart';
-import '../OtpScreen/OtpScreen.dart';
 import '../SignupScreen/SignupControllar.dart';
 import 'LoginController.dart';
 
@@ -116,12 +115,6 @@ class LoginScreen extends StatelessWidget {
                           : () async {
                         await controller.sendOtp(context);
 
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => OtpScreen(mobile: controller.mobileController.text),
-                          ),
-                        );
                       },
 
                       style: ElevatedButton.styleFrom(

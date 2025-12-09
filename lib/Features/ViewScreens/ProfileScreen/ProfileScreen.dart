@@ -46,7 +46,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                     child: Text(
                       'Profile',
                       style: TextStyle(
-                        fontSize: 28,
+                        fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: Colors.grey[800],
                       ),
@@ -169,14 +169,14 @@ class _ProfilescreenState extends State<Profilescreen> {
                           title: 'My Addresses',
                           onTap: () {},
                         ),
-                        _buildDivider(),
-                        _buildMenuItemWithBadge(
-                          icon: Icons.account_balance_wallet_outlined,
-                          iconColor: AppColors.gradientEnd,
-                          title: 'Wallet',
-                          badge: '₹258',
-                          onTap: () {},
-                        ),
+                        // _buildDivider(),
+                        // _buildMenuItemWithBadge(
+                        //   icon: Icons.account_balance_wallet_outlined,
+                        //   iconColor: AppColors.gradientEnd,
+                        //   title: 'Wallet',
+                        //   badge: '₹258',
+                        //   onTap: () {},
+                        // ),
                         _buildDivider(),
                         _buildMenuItem(
                           icon: Icons.help_outline,
@@ -228,31 +228,31 @@ class _ProfilescreenState extends State<Profilescreen> {
                                 _notificationsEnabled = value;
                               });
                             },
-                            activeColor: AppColors.gradientEnd,
+                            activeThumbColor: AppColors.gradientEnd,
                           ),
                         ),
-                        _buildDivider(),
-                        _buildSettingItem(
-                          title: 'Language',
-                          trailing: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'English',
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  color: Colors.grey[600],
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              Icon(
-                                Icons.chevron_right,
-                                color: Colors.grey[400],
-                              ),
-                            ],
-                          ),
-                          onTap: () {},
-                        ),
+                        // _buildDivider(),
+                        // _buildSettingItem(
+                        //   title: 'Language',
+                        //   trailing: Row(
+                        //     mainAxisSize: MainAxisSize.min,
+                        //     children: [
+                        //       Text(
+                        //         'English',
+                        //         style: TextStyle(
+                        //           fontSize: 14,
+                        //           color: Colors.grey[600],
+                        //         ),
+                        //       ),
+                        //       const SizedBox(width: 8),
+                        //       Icon(
+                        //         Icons.chevron_right,
+                        //         color: Colors.grey[400],
+                        //       ),
+                        //     ],
+                        //   ),
+                        //   onTap: () {},
+                        // ),
                         _buildDivider(),
                         _buildSettingItem(
                           title: 'Privacy Policy',

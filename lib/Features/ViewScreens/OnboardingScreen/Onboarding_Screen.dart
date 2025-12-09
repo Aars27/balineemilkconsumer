@@ -1,5 +1,3 @@
-import 'package:consumerbalinee/Core/Constant/app_colors.dart';
-import 'package:consumerbalinee/Core/Constant/text_constants.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -35,7 +33,7 @@ class OnboardingScreen extends StatelessWidget {
                         const Spacer(flex: 1),
 
                         // Image with constrained size
-                        Container(
+                        SizedBox(
                           height: MediaQuery.of(context).size.height * 0.45,
                           child: Image.asset(
                             page.image,
