@@ -1,18 +1,15 @@
 import 'dart:convert';
 import 'package:shared_preferences/shared_preferences.dart';
-
 import '../../Features/ViewScreens/OtpScreen/OtpModal.dart';
-
-
-
 
 class LocalStorage {
   static const String _userIdKey = 'user_id';
   static const String _tokenKey = 'auth_token';
+  static const String _apiTokenKey = 'api_token';
   static const String _userDataKey = 'user_data';
   static const String _fcmTokenKey = 'fcm_token';
 
-  // ================= USER ID =================
+  // USER ID
   static Future<void> saveUserId(int userId) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_userIdKey, userId);
@@ -23,7 +20,7 @@ class LocalStorage {
     return prefs.getInt(_userIdKey);
   }
 
-  // ================= AUTH TOKEN =================
+  // AUTH TOKEN
   static Future<void> saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_tokenKey, token);
@@ -34,7 +31,18 @@ class LocalStorage {
     return prefs.getString(_tokenKey);
   }
 
-  // ================= USER DATA =================
+  // API TOKEN
+  static Future<void> saveApiToken(String token) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_apiTokenKey, token);
+  }
+
+  static Future<String?> getApiToken() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getString(_apiTokenKey);
+  }
+
+  // USER DATA
   static Future<void> saveUserData(UserModel user) async {
     final prefs = await SharedPreferences.getInstance();
     final userJson = jsonEncode(user.toJson());
@@ -50,7 +58,7 @@ class LocalStorage {
     return null;
   }
 
-  // ================= FCM TOKEN =================
+  // FCM TOKEN
   static Future<void> saveFCMToken(String fcmToken) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_fcmTokenKey, fcmToken);
@@ -61,15 +69,15 @@ class LocalStorage {
     return prefs.getString(_fcmTokenKey);
   }
 
-  // ================= CLEAR ALL =================
+  // CLEAR ALL
   static Future<void> clearAll() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
   }
 
-  // ================= CHECK LOGIN STATUS =================
+  // CHECK LOGIN
   static Future<bool> isLoggedIn() async {
-    final token = await getToken();
+    final token = await getApiToken(); // using api_token
     return token != null && token.isNotEmpty;
   }
 }

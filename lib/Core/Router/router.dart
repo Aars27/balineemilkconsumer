@@ -17,7 +17,7 @@ final GoRouter AppRouter = GoRouter(
     }
 
     // ✅ Check if user is logged in
-    final token = await LocalStorage.getToken();
+    final token = await LocalStorage.getApiToken();
     final isLoggedIn = token != null && token.isNotEmpty;
 
     // If logged in and trying to access login/onboarding, redirect to dashboard

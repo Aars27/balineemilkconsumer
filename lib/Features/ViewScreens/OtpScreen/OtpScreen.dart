@@ -177,14 +177,11 @@ class OtpScreen extends StatelessWidget {
                 width: 200,
                 height: 44,
                 child: ElevatedButton(
-                  onPressed: (){
-                    Navigator.push(context, MaterialPageRoute(builder: (context)=> MainWrapperScreen()));
+                  onPressed: controller.isLoading
+                      ? null
+                      : () {
+                    controller.verifyOtp(context, mobile);
                   },
-                  // onPressed: controller.isLoading
-                  //     ? null
-                  //     : () {
-                  //   controller.verifyOtp(context, mobile);
-                  // },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppColors.gradientEnd,
                     foregroundColor: Colors.white,

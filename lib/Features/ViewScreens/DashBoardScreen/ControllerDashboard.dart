@@ -9,6 +9,7 @@ import 'CategoryModal/CategoryModal.dart';
 
 class DashboardController extends ChangeNotifier {
   bool isLoading = false;
+  String? errorMessage;
 
   List<BannerModel> banners = [];
   List<BestSellerModel> bestSellerProducts = [];
@@ -22,46 +23,92 @@ class DashboardController extends ChangeNotifier {
   // --------------------------------------------------
   Future<void> loadDashboard(BuildContext context) async {
     isLoading = true;
+    errorMessage = null;
     notifyListeners();
 
     try {
       // 🔍 CHECK TOKEN FIRST
-      final token = await LocalStorage.getToken();
-      print("\n🔐 TOKEN STATUS BEFORE API CALLS:");
+      final token = await LocalStorage.getApiToken();
+
+      print("\n╔════════════════════════════════════════════════╗");
+      print("║         DASHBOARD DATA LOADING START          ║");
+      print("╚════════════════════════════════════════════════╝");
+
+      print("\n🔐 TOKEN STATUS:");
+      print("─────────────────────────────────────────────────");
       print("Token exists: ${token != null}");
       print("Token empty: ${token?.isEmpty ?? true}");
+
       if (token != null && token.isNotEmpty) {
+        print("✅ Token found!");
         print("Token length: ${token.length}");
-        print("Token preview: ${token.substring(0, token.length > 20 ? 20 : token.length)}...");
+        print("Token preview: ${token.substring(0, token.length > 30 ? 30 : token.length)}...");
       } else {
-        print("⚠️ NO TOKEN FOUND - API calls will fail!");
-        print("Please make sure user is logged in first.\n");
+        print("❌ NO TOKEN FOUND!");
+        print("⚠️  User needs to login first");
+        errorMessage = "Please login to continue";
+        isLoading = false;
+        notifyListeners();
+        return;
       }
 
       final api = ApiService();
 
-      // Fetch all data in parallel for better performance
-      final results = await Future.wait([
-        api.getBanners(),
-        api.getCategories(),
-        api.getBestSellers(),
-      ]);
+      print("\n📊 FETCHING DASHBOARD DATA:");
+      print("─────────────────────────────────────────────────");
 
-      banners = results[0] as List<BannerModel>;
-      categories = results[1] as List<CategoryModel>;
-      bestSellerProducts = results[2] as List<BestSellerModel>;
+      // Fetch Banners
+      print("\n1️⃣ Fetching Banners...");
+      banners = await api.getBanners();
+      print("   ✅ Banners loaded: ${banners.length}");
+      if (banners.isNotEmpty) {
+        print("   📋 First banner ID: ${banners[0].id}");
+        print("   📋 Banner image: ${banners[0].image}");
+      }
+
+      // Fetch Categories
+      print("\n2️⃣ Fetching Categories...");
+      categories = await api.getCategories();
+      print("   ✅ Categories loaded: ${categories.length}");
+      if (categories.isNotEmpty) {
+        print("   📋 First category: ${categories[0].name}");
+        print("   📋 Category image: ${categories[0].image ?? 'No image'}");
+      }
+
+      // Fetch Best Sellers
+      print("\n3️⃣ Fetching Best Sellers...");
+      bestSellerProducts = await api.getBestSellers();
+      print("   ✅ Best Sellers loaded: ${bestSellerProducts.length}");
+      if (bestSellerProducts.isNotEmpty) {
+        print("   📋 First product: ${bestSellerProducts[0].name}");
+        print("   📋 Product price: ₹${bestSellerProducts[0].price}");
+        print("   📋 Product ID: ${bestSellerProducts[0].productId}");
+      }
 
       // Load user details and location
       await _loadUserDetails();
       await _loadLocation(context);
 
-      print("✅ Dashboard loaded successfully");
-      print("Banners: ${banners.length}");
-      print("Categories: ${categories.length}");
-      print("Best Sellers: ${bestSellerProducts.length}");
+      print("\n╔════════════════════════════════════════════════╗");
+      print("║       ✅ DASHBOARD LOADED SUCCESSFULLY         ║");
+      print("╚════════════════════════════════════════════════╝");
+      print("📊 Summary:");
+      print("   • Banners: ${banners.length}");
+      print("   • Categories: ${categories.length}");
+      print("   • Best Sellers: ${bestSellerProducts.length}");
+      print("   • User: $userName");
+      print("   • Location: $locationName");
+      print("════════════════════════════════════════════════\n");
 
-    } catch (e) {
-      print("❌ Dashboard Load Error: $e");
+    } catch (e, stackTrace) {
+      print("\n╔════════════════════════════════════════════════╗");
+      print("║           ❌ DASHBOARD LOAD ERROR              ║");
+      print("╚════════════════════════════════════════════════╝");
+      print("Error: $e");
+      print("Stack trace: $stackTrace");
+      print("════════════════════════════════════════════════\n");
+
+      errorMessage = "Failed to load dashboard data";
 
       // Set empty lists to prevent null errors
       banners = [];
@@ -77,6 +124,7 @@ class DashboardController extends ChangeNotifier {
   // REFRESH
   // --------------------------------------------------
   Future<void> refresh(BuildContext context) async {
+    print("\n🔄 Refreshing Dashboard...\n");
     await loadDashboard(context);
   }
 
@@ -93,7 +141,8 @@ class DashboardController extends ChangeNotifier {
         userName = "User";
       }
 
-      print("👤 User: $userName");
+      print("\n👤 USER DETAILS:");
+      print("   Name: $userName");
     } catch (e) {
       print("❌ Error loading user details: $e");
       userName = "User";
@@ -114,12 +163,26 @@ class DashboardController extends ChangeNotifier {
 
       locationName = locationProvider.currentAddress;
 
-      print("📍 Location: $locationName");
+      print("\n📍 LOCATION:");
+      print("   Address: $locationName");
     } catch (e) {
       print("❌ Error loading location: $e");
       locationName = "Location unavailable";
     }
 
     notifyListeners();
+  }
+
+  // --------------------------------------------------
+  // HELPER METHODS
+  // --------------------------------------------------
+  bool get hasData {
+    return banners.isNotEmpty ||
+        categories.isNotEmpty ||
+        bestSellerProducts.isNotEmpty;
+  }
+
+  bool get hasError {
+    return errorMessage != null;
   }
 }

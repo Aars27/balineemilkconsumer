@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:consumerbalinee/Features/ViewScreens/DashBoardScreen/CategoryModal/CategoryModal.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -26,57 +28,20 @@ class ApiService {
     _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) async {
-          // 🔍 DEBUG: Check if token exists
-          final token = await LocalStorage.getToken();
+          final token = await LocalStorage.getApiToken();
 
-          if (kDebugMode) {
-            print("═══════════════════════════════════════");
-            print("🔑 TOKEN CHECK:");
-            print("Token exists: ${token != null}");
-            print("Token empty: ${token?.isEmpty ?? true}");
-            if (token != null && token.isNotEmpty) {
-              print("Token value: ${token.substring(0, token.length > 20 ? 20 : token.length)}...");
-            } else {
-              print("⚠️ TOKEN IS NULL OR EMPTY!");
-            }
-            print("═══════════════════════════════════════");
-          }
+          print(token);
 
           if (token != null && token.isNotEmpty) {
             options.headers["Authorization"] = "Bearer $token";
-          } else {
-            if (kDebugMode) {
-              print("❌ NO TOKEN AVAILABLE - Request will fail!");
-            }
-          }
-
-          if (kDebugMode) {
-            print("\n📤 REQUEST:");
-            print("${options.method} ${options.baseUrl}${options.path}");
-            print("HEADERS: ${options.headers}");
-            print("BODY: ${options.data}");
-            print("───────────────────────────────────────\n");
           }
 
           handler.next(options);
         },
         onResponse: (response, handler) {
-          if (kDebugMode) {
-            print("\n✅ RESPONSE:");
-            print("Status: ${response.statusCode}");
-            print("Data: ${response.data}");
-            print("───────────────────────────────────────\n");
-          }
           handler.next(response);
         },
         onError: (error, handler) {
-          if (kDebugMode) {
-            print("\n❌ ERROR:");
-            print("Message: ${error.message}");
-            print("Status Code: ${error.response?.statusCode}");
-            print("Response Data: ${error.response?.data}");
-            print("───────────────────────────────────────\n");
-          }
           handler.next(error);
         },
       ),
@@ -96,6 +61,8 @@ class ApiService {
     });
 
     final response = await _dio.post("/consumer-login", data: formData);
+    print(response);
+
     return response.data as Map<String, dynamic>;
   }
 
@@ -105,63 +72,65 @@ class ApiService {
     required String otp,
     required String fcmToken,
   }) async {
-    final requestData = {
+    final body = {
       "user_id": userId,
       "otp": int.parse(otp),
       "fcm_token": fcmToken,
     };
 
-    if (kDebugMode) {
-      print("\n╔═══════════════════════════════════════╗");
-      print("║       VERIFY OTP REQUEST              ║");
-      print("╚═══════════════════════════════════════╝");
-      print("Request Data: $requestData");
+    try {
+      print("========= SENDING BODY =========");
+      print(body);
+
+      final response = await _dio.post("/verify-otp", data: body);
+
+      print("========= RAW RESPONSE =========");
+      print(response);
+
+      print("========= JSON ================");
+      print(response.data);
+
+      print("========= PRETTY JSON =========");
+      print(const JsonEncoder.withIndent("  ").convert(response.data));
+
+      return response.data;
+    } catch (e, st) {
+      print("========= ERROR ================");
+      print(e);
+      print(st);
+      return {"flag": false, "message": "error", "data": null};
     }
-
-    final response = await _dio.post("/verify-otp", data: requestData);
-
-    if (kDebugMode) {
-      print("\n╔═══════════════════════════════════════╗");
-      print("║       VERIFY OTP RESPONSE             ║");
-      print("╚═══════════════════════════════════════╝");
-      print("Full Response: ${response.data}");
-
-      // Check if token exists in response
-      if (response.data is Map) {
-        final data = response.data as Map<String, dynamic>;
-        if (data.containsKey('data') && data['data'] is Map) {
-          final innerData = data['data'] as Map<String, dynamic>;
-          print("\n🔑 TOKEN CHECK:");
-          print("Token exists: ${innerData.containsKey('token')}");
-          if (innerData.containsKey('token')) {
-            final token = innerData['token'];
-            print("Token value: ${token?.toString().substring(0, token.toString().length > 30 ? 30 : token.toString().length)}...");
-          }
-        }
-      }
-      print("═══════════════════════════════════════\n");
-    }
-
-    return response.data;
   }
+
 
   // ================= GET BANNERS =================
   Future<List<BannerModel>> getBanners() async {
+    final token = await LocalStorage.getApiToken();
+
     if (kDebugMode) {
-      print("📱 Fetching Banners...");
+      print("\n╔════════════════════════════════════════════════════════════╗");
+      print("║               🎯 BANNER API CALL                          ║");
+      print("╚════════════════════════════════════════════════════════════╝");
+      print("📦 Stored Token from LocalStorage:");
+      print(token ?? 'NO TOKEN SAVED');
+      print("────────────────────────────────────────────────────────────");
+      print("🔐 Sending Bearer Token:");
+      print("Bearer $token");
+      print("────────────────────────────────────────────────────────────");
     }
 
     final response = await _dio.get("/banner");
+
+    if (kDebugMode) {
+      print("\n✅ BANNER API RESPONSE:");
+      print(response.data);
+      print("════════════════════════════════════════════════════════════\n");
+    }
 
     if (response.data["flag"] == true) {
       final banners = (response.data["data"] as List)
           .map((e) => BannerModel.fromJson(e))
           .toList();
-
-      if (kDebugMode) {
-        print("✅ Banners loaded: ${banners.length}");
-      }
-
       return banners;
     }
     return [];
@@ -169,21 +138,32 @@ class ApiService {
 
   // ================= GET BEST SELLERS =================
   Future<List<BestSellerModel>> getBestSellers() async {
+    final token = await LocalStorage.getApiToken();
+
     if (kDebugMode) {
-      print("🏆 Fetching Best Sellers...");
+      print("\n╔════════════════════════════════════════════════════════════╗");
+      print("║               🏆 BEST SELLERS API CALL                    ║");
+      print("╚════════════════════════════════════════════════════════════╝");
+      print("📦 Stored Token from LocalStorage:");
+      print(token ?? 'NO TOKEN SAVED');
+      print("────────────────────────────────────────────────────────────");
+      print("🔐 Sending Bearer Token:");
+      print("Bearer $token");
+      print("────────────────────────────────────────────────────────────");
     }
 
     final response = await _dio.get("/best-sellers");
+
+    if (kDebugMode) {
+      print("\n✅ BEST SELLERS API RESPONSE:");
+      print(response.data);
+      print("════════════════════════════════════════════════════════════\n");
+    }
 
     if (response.data["flag"] == true) {
       final products = (response.data["best_sellers"] as List)
           .map((e) => BestSellerModel.fromJson(e))
           .toList();
-
-      if (kDebugMode) {
-        print("✅ Best Sellers loaded: ${products.length}");
-      }
-
       return products;
     }
     return [];
@@ -191,21 +171,32 @@ class ApiService {
 
   // ================= GET CATEGORIES =================
   Future<List<CategoryModel>> getCategories() async {
+    final token = await LocalStorage.getApiToken();
+
     if (kDebugMode) {
-      print("📂 Fetching Categories...");
+      print("\n╔════════════════════════════════════════════════════════════╗");
+      print("║               📂 CATEGORIES API CALL                      ║");
+      print("╚════════════════════════════════════════════════════════════╝");
+      print("📦 Stored Token from LocalStorage:");
+      print(token ?? 'NO TOKEN SAVED');
+      print("────────────────────────────────────────────────────────────");
+      print("🔐 Sending Bearer Token:");
+      print("Bearer $token");
+      print("────────────────────────────────────────────────────────────");
     }
 
     final response = await _dio.get("/category_master");
+
+    if (kDebugMode) {
+      print("\n✅ CATEGORIES API RESPONSE:");
+      print(response.data);
+      print("════════════════════════════════════════════════════════════\n");
+    }
 
     if (response.data["flag"] == true) {
       final categories = (response.data["data"] as List)
           .map((e) => CategoryModel.fromJson(e))
           .toList();
-
-      if (kDebugMode) {
-        print("✅ Categories loaded: ${categories.length}");
-      }
-
       return categories;
     }
     return [];

@@ -12,7 +12,6 @@ class OtpController extends ChangeNotifier {
   final otpController = TextEditingController();
   bool isLoading = false;
 
-  // ================= VERIFY OTP =================
   Future<void> verifyOtp(BuildContext context, String mobile) async {
     final otp = otpController.text.trim();
 
@@ -21,7 +20,6 @@ class OtpController extends ChangeNotifier {
       return;
     }
 
-    // Get saved userId and FCM token
     final userId = await LocalStorage.getUserId();
     final fcmToken = await LocalStorage.getFCMToken();
 
@@ -30,70 +28,52 @@ class OtpController extends ChangeNotifier {
       return;
     }
 
-    print("========== OTP CONTROLLER DATA ==========");
-    print("User ID: $userId");
-    print("OTP: $otp");
-    print("FCM Token: $fcmToken");
-    print("Mobile: $mobile");
-    print("=========================================");
-
     isLoading = true;
     notifyListeners();
 
     try {
+      // Call API
       final data = await ApiService().verifyOtp(
         userId: userId,
         otp: otp,
         fcmToken: fcmToken ?? "",
       );
 
-      print("========== CONTROLLER RESPONSE ==========");
-      print("Raw Response: $data");
-      print("=========================================");
-
+      // Parse response
       final response = OtpVerifyResponse.fromJson(data);
 
-      print("========== PARSED RESPONSE ==========");
-      print("Flag: ${response.flag}");
-      print("Message: ${response.message}");
-      print("Token: ${response.token}");
-      print("User: ${response.user}");
-      print("=====================================");
+      print(response);
 
-      if (response.flag) {
-        // Save token
-        if (response.token != null) {
-          await LocalStorage.saveToken(response.token!);
-          print("✅ Token saved successfully");
-        }
-
-        // Save user data
-        if (response.user != null) {
-          await LocalStorage.saveUserData(response.user!);
-          print("✅ User data saved successfully");
-        }
-
+      if (response.flag == false) {
         _msg(context, response.message);
-
-        // Navigate to bottom bar and request location permission
-        if (context.mounted) {
-          context.go('/bottombar');
-
-          // Request location permission after navigation06
-          Future.delayed(const Duration(milliseconds: 500), () {
-            if (context.mounted) {
-              _requestLocationPermission(context);
-            }
-          });
-        }
-      } else {
-        _msg(context, response.message);
+        isLoading = false;
+        notifyListeners();
+        return;
       }
-    } catch (e, stackTrace) {
-      print("========== ERROR ==========");
-      print("Error: $e");
-      print("StackTrace: $stackTrace");
-      print("===========================");
+
+      // Save Token (comes from user.apiToken)
+      if (response.user?.apiToken != null &&
+          response.user!.apiToken!.isNotEmpty) {
+        await LocalStorage.saveApiToken(response.user!.apiToken!);
+      }
+
+      // Save user data
+      if (response.user != null) {
+        await LocalStorage.saveUserData(response.user!);
+      }
+
+      _msg(context, response.message);
+
+      if (context.mounted) {
+        context.go('/bottombar');
+
+        Future.delayed(const Duration(milliseconds: 500), () {
+          if (context.mounted) {
+            _requestLocationPermission(context);
+          }
+        });
+      }
+    } catch (e) {
       _msg(context, "Error: $e");
     }
 
@@ -101,51 +81,17 @@ class OtpController extends ChangeNotifier {
     notifyListeners();
   }
 
-  // ================= REQUEST LOCATION PERMISSION =================
   Future<void> _requestLocationPermission(BuildContext context) async {
-    final locationProvider = Provider.of<LocationProvider>(context, listen: false);
+    final locationProvider =
+    Provider.of<LocationProvider>(context, listen: false);
+
     await locationProvider.fetchLocation();
 
-    // If permission denied, show dialog
-    if (locationProvider.currentAddress.contains("denied") ||
-        locationProvider.currentAddress.contains("disabled")) {
-      if (context.mounted) {
-        _showLocationPermissionDialog(context);
-      }
+    if (locationProvider.currentAddress.contains("denied")) {
+      _showPermissionDialog(context);
     }
   }
 
-  // ================= SHOW LOCATION PERMISSION DIALOG =================
-  void _showLocationPermissionDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Location Permission Required'),
-          content: const Text(
-            'This app needs location access to provide better services. Please enable location permission in settings.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-            ElevatedButton(
-              onPressed: () async {
-                Navigator.of(context).pop();
-                // Open app settings
-                await Geolocator.openAppSettings();
-              },
-              child: const Text('Open Settings'),
-            ),
-          ],
-        );
-      },
-    );
-  }
 
   // ================= RESEND OTP =================
   Future<void> resendOtp(BuildContext context, String mobile) async {
@@ -153,33 +99,19 @@ class OtpController extends ChangeNotifier {
     notifyListeners();
 
     try {
-      print("========== RESEND OTP REQUEST ==========");
-      print("Mobile: $mobile");
-      print("========================================");
-
       final data = await ApiService().requestOtp(mobile);
-
-      print("========== RESEND OTP RESPONSE ==========");
-      print("Raw Response: $data");
-      print("=========================================");
 
       final response = LoginResponse.fromJson(data);
 
-      print("========== PARSED RESEND RESPONSE ==========");
-      print("Flag: ${response.flag}");
-      print("Message: ${response.message}");
-      print("===========================================");
-
       if (response.flag) {
         _msg(context, "OTP resent successfully");
+
+        // Save new user_id again
+        await LocalStorage.saveUserId(response.userId);
       } else {
         _msg(context, response.message);
       }
-    } catch (e, stackTrace) {
-      print("========== RESEND ERROR ==========");
-      print("Error: $e");
-      print("StackTrace: $stackTrace");
-      print("==================================");
+    } catch (e) {
       _msg(context, "Error: $e");
     }
 
@@ -187,8 +119,37 @@ class OtpController extends ChangeNotifier {
     notifyListeners();
   }
 
+
+  void _showPermissionDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => AlertDialog(
+        title: const Text("Location Permission Required"),
+        content: const Text(
+          "Please enable location permission in settings.",
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("Cancel"),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              Navigator.pop(context);
+              await Geolocator.openAppSettings();
+            },
+            child: const Text("Open Settings"),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _msg(BuildContext context, String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg)),
+    );
   }
 
   @override

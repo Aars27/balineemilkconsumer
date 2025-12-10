@@ -3,18 +3,29 @@ class UserModel {
   final String firstName;
   final String lastName;
   final String mobileNo;
-  final String address;
+  final String? email;
   final int roleId;
+  final String? userType;
+  final String? address;
+  final int? isActive;
+  final String? customerId;
+  final String? fcmToken;
+  final String? apiToken; // IMPORTANT
 
   UserModel({
     required this.id,
     required this.firstName,
     required this.lastName,
     required this.mobileNo,
-    required this.address,
+    this.email,
     required this.roleId,
+    this.userType,
+    this.address,
+    this.isActive,
+    this.customerId,
+    this.fcmToken,
+    this.apiToken,
   });
-
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
     return UserModel(
@@ -22,8 +33,14 @@ class UserModel {
       firstName: json['first_name'] ?? "",
       lastName: json['last_name'] ?? "",
       mobileNo: json['mobile_no'] ?? "",
-      address: json['address'] ?? "",
+      email: json['email'],
       roleId: json['role_id'] ?? 0,
+      userType: json['user_type'],
+      address: json['address'],
+      isActive: json['is_active'],
+      customerId: json['customer_id'],
+      fcmToken: json['fcm_token'],
+      apiToken: json['api_token'], // backend sends token here
     );
   }
 
@@ -33,28 +50,30 @@ class UserModel {
       "first_name": firstName,
       "last_name": lastName,
       "mobile_no": mobileNo,
-      "address": address,
+      "email": email,
       "role_id": roleId,
+      "user_type": userType,
+      "address": address,
+      "is_active": isActive,
+      "customer_id": customerId,
+      "fcm_token": fcmToken,
+      "api_token": apiToken,
     };
   }
 
-  // Convenience getter
   String get fullName => "$firstName $lastName".trim();
 }
-
 
 
 
 class OtpVerifyResponse {
   final bool flag;
   final String message;
-  final String? token;
   final UserModel? user;
 
   OtpVerifyResponse({
     required this.flag,
     required this.message,
-    this.token,
     this.user,
   });
 
@@ -62,8 +81,10 @@ class OtpVerifyResponse {
     return OtpVerifyResponse(
       flag: json["flag"] ?? false,
       message: json["message"] ?? "",
-      token: json["token"],
       user: json["user"] != null ? UserModel.fromJson(json["user"]) : null,
     );
   }
+
+  // Use this to get actual token
+  String? get token => user?.apiToken;
 }
