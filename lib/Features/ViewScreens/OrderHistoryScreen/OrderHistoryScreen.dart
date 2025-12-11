@@ -16,8 +16,19 @@ class OrderHistoryView extends StatefulWidget {
 
 class _OrderHistoryViewState extends State<OrderHistoryView> {
   @override
+  void initState() {
+  super.initState();
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+  context.read<OrderHistoryController>().loadOrders();
+  });
+  }
+
+
   Widget build(BuildContext context) {
     final controller = context.watch<OrderHistoryController>();
+
+
+
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
@@ -272,7 +283,7 @@ class OrderCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Order ${order.orderNumber}',
+                   '${order.orderId}',
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -281,7 +292,7 @@ class OrderCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    DateFormat('dd MMM yyyy').format(order.date),
+                    order.date,
                     style: TextStyle(
                       fontSize: 13,
                       color: Colors.grey[600],
@@ -323,7 +334,7 @@ class OrderCard extends StatelessWidget {
                   ),
                 ),
                 Text(
-                  '₹${item.price.toInt()}',
+                  '₹${item.amount.toStringAsFixed(0)}',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
@@ -365,7 +376,8 @@ class OrderCard extends StatelessWidget {
               ),
               ElevatedButton.icon(
                 onPressed: () {
-                  context.read<OrderHistoryController>().reorder(order.id);
+                  context.read<OrderHistoryController>().reorder(order.orderId
+                  );
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.gradientEnd,

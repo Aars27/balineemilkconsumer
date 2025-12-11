@@ -30,22 +30,11 @@ class DashboardController extends ChangeNotifier {
       // 🔍 CHECK TOKEN FIRST
       final token = await LocalStorage.getApiToken();
 
-      print("\n╔════════════════════════════════════════════════╗");
-      print("║         DASHBOARD DATA LOADING START          ║");
-      print("╚════════════════════════════════════════════════╝");
-
-      print("\n🔐 TOKEN STATUS:");
-      print("─────────────────────────────────────────────────");
-      print("Token exists: ${token != null}");
-      print("Token empty: ${token?.isEmpty ?? true}");
 
       if (token != null && token.isNotEmpty) {
-        print("✅ Token found!");
-        print("Token length: ${token.length}");
-        print("Token preview: ${token.substring(0, token.length > 30 ? 30 : token.length)}...");
+
       } else {
-        print("❌ NO TOKEN FOUND!");
-        print("⚠️  User needs to login first");
+
         errorMessage = "Please login to continue";
         isLoading = false;
         notifyListeners();
@@ -54,59 +43,30 @@ class DashboardController extends ChangeNotifier {
 
       final api = ApiService();
 
-      print("\n📊 FETCHING DASHBOARD DATA:");
-      print("─────────────────────────────────────────────────");
 
-      // Fetch Banners
-      print("\n1️⃣ Fetching Banners...");
+
+
       banners = await api.getBanners();
-      print("   ✅ Banners loaded: ${banners.length}");
       if (banners.isNotEmpty) {
-        print("   📋 First banner ID: ${banners[0].id}");
-        print("   📋 Banner image: ${banners[0].image}");
       }
 
       // Fetch Categories
-      print("\n2️⃣ Fetching Categories...");
       categories = await api.getCategories();
-      print("   ✅ Categories loaded: ${categories.length}");
       if (categories.isNotEmpty) {
-        print("   📋 First category: ${categories[0].name}");
-        print("   📋 Category image: ${categories[0].image ?? 'No image'}");
       }
 
       // Fetch Best Sellers
-      print("\n3️⃣ Fetching Best Sellers...");
       bestSellerProducts = await api.getBestSellers();
-      print("   ✅ Best Sellers loaded: ${bestSellerProducts.length}");
       if (bestSellerProducts.isNotEmpty) {
-        print("   📋 First product: ${bestSellerProducts[0].name}");
-        print("   📋 Product price: ₹${bestSellerProducts[0].price}");
-        print("   📋 Product ID: ${bestSellerProducts[0].productId}");
       }
 
       // Load user details and location
       await _loadUserDetails();
       await _loadLocation(context);
 
-      print("\n╔════════════════════════════════════════════════╗");
-      print("║       ✅ DASHBOARD LOADED SUCCESSFULLY         ║");
-      print("╚════════════════════════════════════════════════╝");
-      print("📊 Summary:");
-      print("   • Banners: ${banners.length}");
-      print("   • Categories: ${categories.length}");
-      print("   • Best Sellers: ${bestSellerProducts.length}");
-      print("   • User: $userName");
-      print("   • Location: $locationName");
-      print("════════════════════════════════════════════════\n");
 
     } catch (e, stackTrace) {
-      print("\n╔════════════════════════════════════════════════╗");
-      print("║           ❌ DASHBOARD LOAD ERROR              ║");
-      print("╚════════════════════════════════════════════════╝");
-      print("Error: $e");
-      print("Stack trace: $stackTrace");
-      print("════════════════════════════════════════════════\n");
+
 
       errorMessage = "Failed to load dashboard data";
 
@@ -185,4 +145,36 @@ class DashboardController extends ChangeNotifier {
   bool get hasError {
     return errorMessage != null;
   }
+
+
+
+
+  // -------------- OPEN CATEGORY PRODUCTS PAGE --------------
+  Future<List<Map<String, dynamic>>> getCategoryProducts(int categoryId) async {
+    final api = ApiService();
+    return await api.getProductsByCategory(categoryId);
+  }
+
+// -------------- ADD TO CART (BEST SELLER) --------------
+  Future<bool> addProductToCart(int productId) async {
+    final api = ApiService();
+    final success = await api.addToCart(
+      productId: productId,
+      quantity: 1,
+    );
+
+    return success;
+  }
+
+
+
+
+
+
+
+
+
+
+
+
 }

@@ -9,8 +9,6 @@ import 'BestSellerModal/Best_Sellar_Modal.dart';
 import 'CategoryModal/CategoryModal.dart';
 
 
-
-
 class DashboardView extends StatefulWidget {
   const DashboardView({super.key});
 
@@ -85,9 +83,14 @@ class _DashboardViewState extends State<DashboardView> {
     print("  • Categories: ${controller.categories.length}");
     print("  • Best Sellers: ${controller.bestSellerProducts.length}");
 
+    // Check if we have data (even if there's an error, show data if available)
+    final hasData = controller.banners.isNotEmpty ||
+        controller.categories.isNotEmpty ||
+        controller.bestSellerProducts.isNotEmpty;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      body: controller.isLoading
+      body: controller.isLoading && !hasData
           ? const Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -103,7 +106,7 @@ class _DashboardViewState extends State<DashboardView> {
           ],
         ),
       )
-          : controller.hasError
+          : controller.hasError && !hasData
           ? Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -113,6 +116,7 @@ class _DashboardViewState extends State<DashboardView> {
             Text(
               controller.errorMessage ?? 'Something went wrong',
               style: const TextStyle(fontSize: 16, color: Colors.red),
+              textAlign: TextAlign.center,
             ),
             const SizedBox(height: 24),
             ElevatedButton(
@@ -127,6 +131,26 @@ class _DashboardViewState extends State<DashboardView> {
         onRefresh: () async {
           print("\n🔄 PULL TO REFRESH TRIGGERED\n");
           await controller.refresh(context);
+
+          // Show snackbar if refresh failed but we have existing data
+          if (controller.hasError && hasData) {
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    controller.errorMessage ?? 'Failed to refresh data',
+                  ),
+                  backgroundColor: Colors.orange,
+                  duration: const Duration(seconds: 3),
+                  action: SnackBarAction(
+                    label: 'Retry',
+                    textColor: Colors.white,
+                    onPressed: () => controller.refresh(context),
+                  ),
+                ),
+              );
+            }
+          }
         },
         child: Stack(
           children: [
@@ -170,7 +194,7 @@ class _DashboardViewState extends State<DashboardView> {
                                   Text(
                                     controller.userName,
                                     style: const TextStyle(
-                                      fontSize: 24,
+                                      fontSize: 20,
                                       color: Colors.red,
                                       fontWeight: FontWeight.bold,
                                     ),
@@ -201,10 +225,7 @@ class _DashboardViewState extends State<DashboardView> {
                               color: Colors.black,
                               size: 24,
                             ),
-                            onPressed: () {
-
-
-                            },
+                            onPressed: () {},
                           ),
                         ],
                       ),
@@ -242,13 +263,6 @@ class _DashboardViewState extends State<DashboardView> {
                       padding: const EdgeInsets.only(top: 70),
                       child: Column(
                         children: [
-                          // Text(
-                          //   '📊 Banners: ${controller.banners.length}',
-                          //   style: const TextStyle(
-                          //     fontSize: 12,
-                          //     color: Colors.black54,
-                          //   ),
-                          // ),
                           const SizedBox(height: 8),
                           CarouselSlider(
                             options: CarouselOptions(
@@ -426,7 +440,6 @@ class _DashboardViewState extends State<DashboardView> {
                                 color: Colors.grey[600],
                               ),
                             ),
-
                           ],
                         ),
                       ),
@@ -458,12 +471,8 @@ class _DashboardViewState extends State<DashboardView> {
                 ],
               ),
             ),
-
-
           ],
         ),
-
-
       ),
     );
   }
@@ -585,9 +594,7 @@ class CategoryCard extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(50),
             color: Colors.white,
-            border: Border.all(
-              color: Colors.grey.shade200
-            ),
+            border: Border.all(color: Colors.grey.shade200),
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.05),
@@ -622,7 +629,6 @@ class CategoryCard extends StatelessWidget {
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
         ),
-
       ],
     );
   }

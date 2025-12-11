@@ -1,6 +1,14 @@
+import 'package:consumerbalinee/Features/ViewScreens/DailyOrderScreen/DailyOrderProvider.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
+import '../../../Components/Savetoken/utils_local_storage.dart';
+import '../../../Core/Constant/app_colors.dart'; // Ensure this path is correct
 
-import '../../../Core/Constant/app_colors.dart';
+// Import the new screens
+import 'EditScreen.dart' hide AppColors;
+import 'Helpandsupport.dart';
+import 'PrivacyPolicy.dart';
+
 
 class Profilescreen extends StatefulWidget {
   const Profilescreen({super.key});
@@ -11,6 +19,39 @@ class Profilescreen extends StatefulWidget {
 
 class _ProfilescreenState extends State<Profilescreen> {
   bool _notificationsEnabled = true;
+  // State for the milk-related update point
+  String _milkProfileStatus = 'Basic Milk Plan';
+
+  String _userName = "Guest User";
+  String _userType = "Basic Milk Plan";
+
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserDetails();
+  }
+
+  Future<void> _loadUserDetails() async {
+    final user = await LocalStorage.getUserData();
+
+    if (user != null) {
+      setState(() {
+        _userName = user.fullName.isNotEmpty ? user.fullName : "Guest User";
+        _userType = user.userType ?? "Basic Milk Plan";
+      });
+    }
+  }
+
+
+
+  // Helper function for navigation
+  void _navigateTo(BuildContext context, Widget screen) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => screen),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -19,6 +60,7 @@ class _ProfilescreenState extends State<Profilescreen> {
       body: Stack(
         children: [
           // Background Vector Image at top
+          //
           Positioned(
             top: 0,
             left: 0,
@@ -27,7 +69,7 @@ class _ProfilescreenState extends State<Profilescreen> {
               height: 180,
               decoration: const BoxDecoration(
                 image: DecorationImage(
-                  image: AssetImage('assets/Vector.png'),
+                  image: AssetImage('assets/Vector.png'), // Assumes 'assets/Vector.png' exists
                   fit: BoxFit.cover,
                 ),
               ),
@@ -42,7 +84,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
                     child: Text(
                       'Profile',
                       style: TextStyle(
@@ -59,7 +101,7 @@ class _ProfilescreenState extends State<Profilescreen> {
                     child: Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
+                        gradient: LinearGradient(
                           colors: [
                             AppColors.gradientStart,
                             AppColors.gradientEnd,
@@ -99,8 +141,8 @@ class _ProfilescreenState extends State<Profilescreen> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
-                                  'Guest User',
+                                 Text(
+                                  _userName,
                                   style: TextStyle(
                                     fontSize: 20,
                                     fontWeight: FontWeight.bold,
@@ -108,8 +150,9 @@ class _ProfilescreenState extends State<Profilescreen> {
                                   ),
                                 ),
                                 const SizedBox(height: 4),
+                                // Milk Profile Update Point
                                 Text(
-                                  'Not logged in',
+                                    _userType,
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: Colors.white.withOpacity(0.9),
@@ -119,20 +162,6 @@ class _ProfilescreenState extends State<Profilescreen> {
                             ),
                           ),
 
-                          // Edit Icon
-                          Container(
-                            width: 40,
-                            height: 40,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(10),
-                            ),
-                            child: const Icon(
-                              Icons.edit_outlined,
-                              color: Colors.white,
-                              size: 20,
-                            ),
-                          ),
                         ],
                       ),
                     ),
@@ -160,29 +189,24 @@ class _ProfilescreenState extends State<Profilescreen> {
                           icon: Icons.shopping_bag_outlined,
                           iconColor:AppColors.gradientEnd,
                           title: 'My Daily Orders',
-                          onTap: () {},
+                          onTap: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>Dailyorderscreen()));
+                          }, // Add navigation here if needed
                         ),
                         _buildDivider(),
                         _buildMenuItem(
-                          icon: Icons.location_on_outlined,
+                          icon: Icons.edit_outlined,
                           iconColor: AppColors.gradientEnd,
-                          title: 'My Addresses',
-                          onTap: () {},
+                          title: 'Edit Profile',
+                          onTap: () => _navigateTo(context, const EditProfileScreen()),
                         ),
-                        // _buildDivider(),
-                        // _buildMenuItemWithBadge(
-                        //   icon: Icons.account_balance_wallet_outlined,
-                        //   iconColor: AppColors.gradientEnd,
-                        //   title: 'Wallet',
-                        //   badge: '₹258',
-                        //   onTap: () {},
-                        // ),
                         _buildDivider(),
+                        // Help & Support with onTap
                         _buildMenuItem(
                           icon: Icons.help_outline,
                           iconColor: AppColors.gradientEnd,
                           title: 'Help & Support',
-                          onTap: () {},
+                          onTap: () => _navigateTo(context, const HelpSupportScreen()),
                         ),
                       ],
                     ),
@@ -231,36 +255,15 @@ class _ProfilescreenState extends State<Profilescreen> {
                             activeThumbColor: AppColors.gradientEnd,
                           ),
                         ),
-                        // _buildDivider(),
-                        // _buildSettingItem(
-                        //   title: 'Language',
-                        //   trailing: Row(
-                        //     mainAxisSize: MainAxisSize.min,
-                        //     children: [
-                        //       Text(
-                        //         'English',
-                        //         style: TextStyle(
-                        //           fontSize: 14,
-                        //           color: Colors.grey[600],
-                        //         ),
-                        //       ),
-                        //       const SizedBox(width: 8),
-                        //       Icon(
-                        //         Icons.chevron_right,
-                        //         color: Colors.grey[400],
-                        //       ),
-                        //     ],
-                        //   ),
-                        //   onTap: () {},
-                        // ),
                         _buildDivider(),
+                        // Privacy Policy with onTap
                         _buildSettingItem(
                           title: 'Privacy Policy',
                           trailing: Icon(
                             Icons.chevron_right,
                             color: Colors.grey[400],
                           ),
-                          onTap: () {},
+                          onTap: () => _navigateTo(context, const PrivacyPolicyScreen()),
                         ),
                       ],
                     ),
@@ -277,14 +280,18 @@ class _ProfilescreenState extends State<Profilescreen> {
                           child: ElevatedButton(
                             style : ElevatedButton.styleFrom(
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12)
+                                  borderRadius: BorderRadius.circular(12)
                               ),
-                                                backgroundColor: Colors.red,
-                                              ),
-                            onPressed: (){
+                              backgroundColor: Colors.red,
+                            ),
+                            onPressed: () async{
+                              await LocalStorage.clearAll();
 
+                              if (!context.mounted) return;
+
+                              context.go('/loginpage'); // Redirect to login screen
                             },
-                            child: Text(
+                            child: const Text( // Added const for better performance
                               'Logout',
                               style: TextStyle(
                                 fontSize: 18,
@@ -316,6 +323,7 @@ class _ProfilescreenState extends State<Profilescreen> {
     );
   }
 
+  // Helper Widgets (Unchanged)
   Widget _buildMenuItem({
     required IconData icon,
     required Color iconColor,
@@ -371,6 +379,7 @@ class _ProfilescreenState extends State<Profilescreen> {
     required String badge,
     required VoidCallback onTap,
   }) {
+    // This widget is not currently used but remains in the code
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(16),

@@ -5,8 +5,10 @@ import 'package:provider/provider.dart';
 
 import '../../Core/Constant/app_colors.dart';
 import '../ViewScreens/CartScreen/CartProvider.dart';
+import '../ViewScreens/CartScreen/CartScreen.dart';
 import '../ViewScreens/DashBoardScreen/DashboardScreeen.dart';
 import '../ViewScreens/OrderHistoryScreen/OrderHistoryProvider.dart';
+import '../ViewScreens/OrderHistoryScreen/OrderHistoryScreen.dart';
 import 'MainNavigator.dart';
 
 class MainWrapperScreen extends StatelessWidget {
@@ -15,8 +17,8 @@ class MainWrapperScreen extends StatelessWidget {
   final List<Widget> _screens = [
     DashboardView(), // Your dashboard screen
     DailyOrderView(), // Create this screen
-    Cartscreen(), // Create this screen
-    Orderhistoryscreen(), // Create this screen
+    CartView(), // Create this screen
+    OrderHistoryView(), // Create this screen
     Profilescreen(), // Create this screen
   ];
 
@@ -91,7 +93,7 @@ class MainWrapperScreen extends StatelessWidget {
                 context,
                 controller,
                 index: 3,
-                icon: Icons.receipt_long_rounded,
+                icon: Icons.history,
                 label: 'Order',
               ),
               _buildNavItem(

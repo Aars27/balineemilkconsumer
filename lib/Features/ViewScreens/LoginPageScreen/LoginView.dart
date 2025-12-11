@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Core/Constant/app_colors.dart';
+import '../../../Core/Constant/app_images.dart';
 import '../SignupScreen/SignupControllar.dart';
 import 'LoginController.dart';
 
@@ -27,10 +28,11 @@ class LoginScreen extends StatelessWidget {
               padding: const EdgeInsets.only(top: 60, bottom: 20),
               child: Column(
                 children: [
-                  Image.asset('assets/Balinee-milk.gif',width: 200,),
+                  Image.asset(AppImages.appLogo,width: 200,),
                   const SizedBox(height: 10),
                   const Text(
-                    "Welcome to Balinee Milk",
+                    "Welcome to Milk",
+                    // "Balinee"
                     style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.bold,

@@ -3,6 +3,7 @@ class BestSellerModel {
   final String name;
   final String image;
   final String price;
+  final String quantity;
   final int totalSold;
 
   BestSellerModel({
@@ -10,6 +11,7 @@ class BestSellerModel {
     required this.name,
     required this.image,
     required this.price,
+    required this.quantity,
     required this.totalSold,
   });
 
@@ -19,6 +21,7 @@ class BestSellerModel {
       name: json['name'] ?? '',
       image: json['image'] ?? '',
       price: json['price'] ?? "0",
+      quantity: json['quantity']??"0",
       totalSold: json['total_sold'] ?? 0,
     );
   }

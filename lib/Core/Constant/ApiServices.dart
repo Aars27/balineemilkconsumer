@@ -5,8 +5,10 @@ import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
 import '../../Components/Savetoken/utils_local_storage.dart';
+import '../../Features/ViewScreens/DailyOrderScreen/DailyModal.dart';
 import '../../Features/ViewScreens/DashBoardScreen/Bannermodal/BannerModal.dart';
 import '../../Features/ViewScreens/DashBoardScreen/BestSellerModal/Best_Sellar_Modal.dart';
+import '../../Features/ViewScreens/OrderHistoryScreen/OrderHistoryModal.dart';
 
 class ApiService {
   late final Dio _dio;
@@ -201,4 +203,91 @@ class ApiService {
     }
     return [];
   }
+
+
+
+  // ================= GET PRODUCTS BY CATEGORY =================
+  Future<List<Map<String, dynamic>>> getProductsByCategory(int categoryId) async {
+    final response = await _dio.get("/product-list/$categoryId");
+
+    if (response.data["flag"] == true) {
+      return (response.data["data"] as List)
+          .map((e) => e as Map<String, dynamic>)
+          .toList();
+    }
+    return [];
+  }
+
+// ================= ADD TO CART =================
+  Future<bool> addToCart({
+    required int productId,
+    required int quantity,
+  }) async {
+    final body = {
+      "product_id": productId,
+      "quantity": quantity,
+    };
+
+    final response = await _dio.post("/cart/add", data: body);
+
+    return response.data["flag"] == true;
+  }
+
+
+  Future<OrderHistoryResponse> getOrderHistory() async {
+    final response = await _dio.get("/order-history");
+       print('this is histoyr:${response}');
+    return OrderHistoryResponse.fromJson(response.data);
+  }
+
+
+// ================= GET DAILY ORDERED PRODUCTS =================
+  Future<List<DailyOrder>> getDailyOrders() async {
+    final token = await LocalStorage.getApiToken();
+
+    print("🔐 Sending token: $token");
+
+    try {
+      final response = await _dio.get(
+        "/daily-ordered-products",
+        options: Options(
+          headers: {
+            "Authorization": "Bearer $token",
+            "Accept": "application/json",
+          },
+        ),
+      );
+
+      print("📥 DAILY ORDERS RESPONSE: ${response.data}");
+
+      if (response.data["flag"] == true) {
+        final list = (response.data["data"] as List)
+            .map((e) => DailyOrder.fromJson(e))
+            .toList();
+        return list;
+      }
+    } catch (e) {
+      print("❌ Daily Orders API Error: $e");
+    }
+
+    return [];
+  }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 }

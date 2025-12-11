@@ -8,6 +8,7 @@ import '../../Core/Router/router.dart';
 import '../../Features/ViewScreens/CartScreen/CartController.dart';
 import '../../Features/ViewScreens/DailyOrderScreen/DailyController.dart';
 import '../../Features/ViewScreens/LoginPageScreen/LoginController.dart';
+import '../../Features/ViewScreens/OrderHistoryScreen/OrderHistoryController.dart';
 import '../../Features/ViewScreens/OtpScreen/OtpController.dart';
 import '../../Features/ViewScreens/SignupScreen/SignupControllar.dart';
 import '../Location/Location.dart';
@@ -55,6 +56,8 @@ class _MainprovidersState extends State<Mainproviders> {
         ChangeNotifierProvider(create: (_) =>  CartController()),
         ChangeNotifierProvider(create: (_) => DashboardController()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
+        ChangeNotifierProvider(create: (_) => OrderHistoryController()),
+
 
 
 

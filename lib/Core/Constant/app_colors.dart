@@ -25,6 +25,11 @@ class AppColors {
   static const Color gradientStart = Color(0xFF98C9F3);
   static const Color gradientEnd = Color(0xFF0372BB);
 
+
+  static const Color gradienTStart = Color(0xFF4C7FFF);
+  static const Color gradienTEnd = Color(0xFF00C7FF);
+
+
   static const LinearGradient routeBackgroundGradient = LinearGradient(
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,

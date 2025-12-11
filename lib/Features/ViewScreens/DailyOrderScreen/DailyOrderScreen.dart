@@ -3,8 +3,6 @@ import 'package:provider/provider.dart';
 import 'DailyController.dart';
 import 'DailyModal.dart';
 
-
-
 class DailyOrderView extends StatefulWidget {
   const DailyOrderView({super.key});
 
@@ -14,6 +12,14 @@ class DailyOrderView extends StatefulWidget {
 
 class _DailyOrderViewState extends State<DailyOrderView> {
   @override
+  void initState() {
+    super.initState();
+    Future.microtask(() {
+      context.read<DailyOrderController>().loadDailyOrders();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final controller = context.watch<DailyOrderController>();
 
@@ -21,7 +27,7 @@ class _DailyOrderViewState extends State<DailyOrderView> {
       backgroundColor: Colors.white,
       body: Stack(
         children: [
-          // Background Vector Image
+          // ======= BACKGROUND VECTOR IMAGE =======
           Positioned(
             top: 0,
             left: 0,
@@ -37,11 +43,10 @@ class _DailyOrderViewState extends State<DailyOrderView> {
             ),
           ),
 
-
-          // Main Content
+          // ========== MAIN CONTENT ==========
           CustomScrollView(
             slivers: [
-              // App Bar
+              // ======== APP BAR DESIGN =========
               SliverAppBar(
                 backgroundColor: Colors.transparent,
                 elevation: 0,
@@ -74,72 +79,35 @@ class _DailyOrderViewState extends State<DailyOrderView> {
                 ),
               ),
 
-              // Filter Chips
+              // ======= FILTER CHIPS =========
               SliverToBoxAdapter(
                 child: Padding(
                   padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
                   child: Row(
                     children: [
-                      _buildFilterChip(
-                        context,
-                        controller,
-                        'All',
-                        Icons.list_alt,
-                      ),
+                      _buildFilterChip(context, controller, 'All', Icons.list_alt),
                       const SizedBox(width: 12),
-                      _buildFilterChip(
-                        context,
-                        controller,
-                        'Active',
-                        Icons.check_circle,
-                      ),
+                      _buildFilterChip(context, controller, 'Active', Icons.check_circle),
                       const SizedBox(width: 12),
-                      _buildFilterChip(
-                        context,
-                        controller,
-                        'Paused',
-                        Icons.pause_circle,
-                      ),
+                      _buildFilterChip(context, controller, 'Paused', Icons.pause_circle),
                     ],
                   ),
                 ),
               ),
 
-              // Orders List
+              // ====== DAILY ORDER LIST ======
               controller.isLoading
                   ? const SliverFillRemaining(
                 child: Center(child: CircularProgressIndicator()),
               )
                   : controller.filteredOrders.isEmpty
-                  ? SliverFillRemaining(
-                child: Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.inbox_outlined,
-                        size: 80,
-                        color: Colors.grey[300],
-                      ),
-                      const SizedBox(height: 16),
-                      Text(
-                        'No orders found',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey[600],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              )
+                  ? _buildEmptyState()
                   : SliverPadding(
                 padding: const EdgeInsets.fromLTRB(20, 10, 20, 100),
                 sliver: SliverList(
                   delegate: SliverChildBuilderDelegate(
                         (context, index) {
-                      final order =
-                      controller.filteredOrders[index];
+                      final order = controller.filteredOrders[index];
                       return DailyOrderCard(order: order);
                     },
                     childCount: controller.filteredOrders.length,
@@ -148,12 +116,12 @@ class _DailyOrderViewState extends State<DailyOrderView> {
               ),
             ],
           ),
-
         ],
       ),
     );
   }
 
+  // ===== Filter Chip Widget =====
   Widget _buildFilterChip(
       BuildContext context,
       DailyOrderController controller,
@@ -195,9 +163,31 @@ class _DailyOrderViewState extends State<DailyOrderView> {
       ),
     );
   }
+
+  // ====== EMPTY UI ======
+  SliverFillRemaining _buildEmptyState() {
+    return SliverFillRemaining(
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.inbox_outlined, size: 80, color: Colors.grey[300]),
+            const SizedBox(height: 16),
+            Text(
+              'No orders found',
+              style: TextStyle(fontSize: 18, color: Colors.grey[600]),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
 
-// Daily Order Card Widget
+// ===================================================================
+// =============== UPDATED DAILY ORDER CARD (WORKING) =================
+// ===================================================================
+
 class DailyOrderCard extends StatelessWidget {
   final DailyOrder order;
 
@@ -205,6 +195,8 @@ class DailyOrderCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final imageUrl = "https://balinee.pmmsapp.com/${order.image}";
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
@@ -221,12 +213,12 @@ class DailyOrderCard extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Order Header
+          // ===== HEADER =====
           Container(
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                // Product Image
+                // === PRODUCT IMAGE ===
                 Container(
                   width: 70,
                   height: 70,
@@ -234,59 +226,41 @@ class DailyOrderCard extends StatelessWidget {
                     color: const Color(0xFFF8F9FA),
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: Center(
-                    child: Image.asset(
-                      order.productImage,
-                      height: 50,
-                      fit: BoxFit.contain,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Icon(
-                          Icons.local_drink,
-                          size: 40,
-                          color: const Color(0xFF4A90E2),
-                        );
-                      },
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.network(
+                      imageUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.broken_image, size: 40, color: Colors.blue),
                     ),
                   ),
                 ),
+
                 const SizedBox(width: 16),
 
-                // Product Details
+                // === PRODUCT DETAILS ===
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        order.productName,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black87,
-                        ),
-                      ),
+                      Text(order.productName,
+                          style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black87)),
                       const SizedBox(height: 4),
                       Text(
-                        '${order.quantity} x Rs.${order.price.toStringAsFixed(0)}',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                        ),
+                        "${order.totalQty} × ₹${order.price}",
+                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
                       ),
                       const SizedBox(height: 8),
                       Row(
                         children: [
-                          Icon(
-                            Icons.access_time,
-                            size: 14,
-                            color: Colors.grey[500],
-                          ),
+                          const Icon(Icons.shopping_bag, size: 14, color: Colors.grey),
                           const SizedBox(width: 4),
                           Text(
-                            order.deliveryTime,
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: Colors.grey[600],
-                            ),
+                            "${order.totalOrders} Orders",
+                            style: TextStyle(fontSize: 12, color: Colors.grey[600]),
                           ),
                         ],
                       ),
@@ -294,24 +268,19 @@ class DailyOrderCard extends StatelessWidget {
                   ),
                 ),
 
-                // Status Badge
+                // === STATUS BADGE ===
                 Container(
-                  padding:
-                  const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: order.isActive
-                        ? const Color(0xFF4CAF50).withOpacity(0.1)
-                        : Colors.orange.withOpacity(0.1),
+                    color: order.isActive ? Colors.green.withOpacity(0.1) : Colors.orange.withOpacity(0.1),
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
-                    order.isActive ? 'Active' : 'Paused',
+                    order.isActive ? "Active" : "Paused",
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: order.isActive
-                          ? const Color(0xFF4CAF50)
-                          : Colors.orange,
+                      color: order.isActive ? Colors.green : Colors.orange,
                     ),
                   ),
                 ),
@@ -319,48 +288,33 @@ class DailyOrderCard extends StatelessWidget {
             ),
           ),
 
-          // Divider
           Divider(height: 1, color: Colors.grey[200]),
 
-          // Order Footer
+          // ===== FOOTER =====
           Padding(
             padding: const EdgeInsets.all(16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Delivery Schedule
+                // PRODUCT ID (API doesn't send delivery date)
                 Row(
                   children: [
-                    Icon(
-                      Icons.calendar_today,
-                      size: 16,
-                      color: Colors.grey[600],
-                    ),
+                    const Icon(Icons.qr_code, size: 16, color: Colors.grey),
                     const SizedBox(width: 8),
                     Text(
-                      order.deliveryDate,
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                        color: Colors.grey[700],
-                      ),
+                      "Product ID: ${order.id}",
+                      style: TextStyle(fontSize: 13, color: Colors.grey[700]),
                     ),
                   ],
                 ),
 
-                // Action Buttons
+                // ==== ACTION BUTTONS ====
                 Row(
                   children: [
-                    // Edit Button
+                    // Edit button
                     IconButton(
-                      onPressed: () {
-                        // Navigate to edit screen
-                      },
-                      icon: Icon(
-                        Icons.edit_outlined,
-                        size: 20,
-                        color: Colors.grey[600],
-                      ),
+                      onPressed: () {},
+                      icon: Icon(Icons.edit_outlined, size: 20, color: Colors.grey[600]),
                       style: IconButton.styleFrom(
                         backgroundColor: Colors.grey[100],
                         padding: const EdgeInsets.all(8),
@@ -368,22 +322,18 @@ class DailyOrderCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
 
-                    // Pause/Resume Button
+                    // Pause / Resume
                     IconButton(
                       onPressed: () {
-                        context
-                            .read<DailyOrderController>()
-                            .toggleOrderStatus(order.id);
+                        context.read<DailyOrderController>().toggleOrderStatus(order.id);
                       },
                       icon: Icon(
                         order.isActive ? Icons.pause : Icons.play_arrow,
-                        size: 20,
                         color: Colors.white,
+                        size: 20,
                       ),
                       style: IconButton.styleFrom(
-                        backgroundColor: order.isActive
-                            ? Colors.orange
-                            : const Color(0xFF4CAF50),
+                        backgroundColor: order.isActive ? Colors.orange : Colors.green,
                         padding: const EdgeInsets.all(8),
                       ),
                     ),

@@ -1,96 +1,54 @@
-// ==================== CONTROLLER ====================
-import 'package:flutter/foundation.dart';
-
+import 'package:flutter/material.dart';
+import '../../../Core/Constant/ApiServices.dart';
 import 'DailyModal.dart';
 
 class DailyOrderController extends ChangeNotifier {
-  List<DailyOrder> _orders = [];
-  bool _isLoading = false;
-  String _selectedFilter = 'All'; // All, Active, Paused
+  List<DailyOrder> allOrders = [];
+  List<DailyOrder> filteredOrders = [];
 
-  List<DailyOrder> get orders => _orders;
-  bool get isLoading => _isLoading;
-  String get selectedFilter => _selectedFilter;
+  String selectedFilter = "All";
+  bool isLoading = false;
 
   DailyOrderController() {
-    loadOrders();
+    loadDailyOrders();
   }
 
-  Future<void> loadOrders() async {
-    _isLoading = true;
+  Future<void> loadDailyOrders() async {
+    isLoading = true;
     notifyListeners();
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    final api = ApiService();
+    allOrders = await api.getDailyOrders();
 
-    _orders = [
-      DailyOrder(
-        id: '1',
-        productName: 'Full Cream Milk',
-        productImage: 'assets/milk_pack.png',
-        price: 35,
-        quantity: 2,
-        deliveryTime: '6:00 AM - 7:00 AM',
-        deliveryDate: 'Every Day',
-        isActive: true,
-        status: 'delivered',
-      ),
-      DailyOrder(
-        id: '2',
-        productName: 'Fresh Curd',
-        productImage: 'assets/curd.png',
-        price: 40,
-        quantity: 1,
-        deliveryTime: '6:00 AM - 7:00 AM',
-        deliveryDate: 'Every Day',
-        isActive: true,
-        status: 'scheduled',
-      ),
-      DailyOrder(
-        id: '3',
-        productName: 'Toned Milk',
-        productImage: 'assets/milk_pack.png',
-        price: 30,
-        quantity: 1,
-        deliveryTime: '6:00 AM - 7:00 AM',
-        deliveryDate: 'Mon, Wed, Fri',
-        isActive: false,
-        status: 'pending',
-      ),
-    ];
-
-    _isLoading = false;
+    applyFilter();
+    isLoading = false;
     notifyListeners();
   }
 
+  // ---------------- FILTER ORDERS ----------------
   void setFilter(String filter) {
-    _selectedFilter = filter;
+    selectedFilter = filter;
+    applyFilter();
     notifyListeners();
   }
 
-  void toggleOrderStatus(String orderId) {
-    final index = _orders.indexWhere((order) => order.id == orderId);
+  void applyFilter() {
+    if (selectedFilter == "All") {
+      filteredOrders = List.from(allOrders);
+    } else if (selectedFilter == "Active") {
+      filteredOrders = allOrders.where((o) => o.isActive).toList();
+    } else if (selectedFilter == "Paused") {
+      filteredOrders = allOrders.where((o) => !o.isActive).toList();
+    }
+  }
+
+  // ---------------- TOGGLE ACTIVE/PAUSE ----------------
+  void toggleOrderStatus(int productId) {
+    final index = allOrders.indexWhere((o) => o.id == productId);
     if (index != -1) {
-      _orders[index] = DailyOrder(
-        id: _orders[index].id,
-        productName: _orders[index].productName,
-        productImage: _orders[index].productImage,
-        price: _orders[index].price,
-        quantity: _orders[index].quantity,
-        deliveryTime: _orders[index].deliveryTime,
-        deliveryDate: _orders[index].deliveryDate,
-        isActive: !_orders[index].isActive,
-        status: _orders[index].status,
-      );
+      allOrders[index].isActive = !allOrders[index].isActive;
+      applyFilter();
       notifyListeners();
     }
-  }
-
-  List<DailyOrder> get filteredOrders {
-    if (_selectedFilter == 'All') return _orders;
-    if (_selectedFilter == 'Active') {
-      return _orders.where((order) => order.isActive).toList();
-    }
-    return _orders.where((order) => !order.isActive).toList();
   }
 }

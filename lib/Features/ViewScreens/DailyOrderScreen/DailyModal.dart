@@ -1,24 +1,35 @@
-
 class DailyOrder {
-  final String id;
+  final int id;
   final String productName;
-  final String productImage;
+  final String image;
+  final String unit;
   final double price;
-  final int quantity;
-  final String deliveryTime;
-  final String deliveryDate;
-  final bool isActive;
-  final String status; // 'delivered', 'pending', 'scheduled'
+  final int totalQty;
+  final int totalOrders;
+
+  bool isActive; // For Pause/Resume Button
 
   DailyOrder({
     required this.id,
     required this.productName,
-    required this.productImage,
+    required this.image,
+    required this.unit,
     required this.price,
-    required this.quantity,
-    required this.deliveryTime,
-    required this.deliveryDate,
+    required this.totalQty,
+    required this.totalOrders,
     this.isActive = true,
-    this.status = 'scheduled',
   });
+
+  factory DailyOrder.fromJson(Map<String, dynamic> json) {
+    return DailyOrder(
+      id: json["product_id"],
+      productName: json["product_name"],
+      image: json["image"] ?? "",
+      unit: json["unit"] ?? "",
+      price: (json["final_rate"] ?? 0).toDouble(),
+      totalOrders: json["total_orders"] ?? 0,
+      totalQty: json["total_qty"] ?? 0,
+      isActive: true,
+    );
+  }
 }
