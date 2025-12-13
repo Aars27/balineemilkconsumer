@@ -1,115 +1,284 @@
+import 'dart:async';
 
-// ==================== CONTROLLER ====================
-import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
+import 'package:geocoding/geocoding.dart';
+import 'package:geolocator/geolocator.dart';
 
+import 'CartAPi.dart';
 import 'CartModal.dart';
+import 'orrdermodal.dart';
 
 class CartController extends ChangeNotifier {
-  List<CartItem> _cartItems = [];
-  bool _isLoading = false;
-  String _promoCode = '';
-  double _discount = 0;
+  final CartApiService _api = CartApiService();
 
-  List<CartItem> get cartItems => _cartItems;
-  bool get isLoading => _isLoading;
-  String get promoCode => _promoCode;
-  double get discount => _discount;
+  bool isLoading = false;
+  bool isUpdating = false; // ✅ Separate flag for quantity updates
 
-  CartController() {
-    loadCart();
-  }
+  CartData? _cart;
+  OrderSummary? summary;
 
-  Future<void> loadCart() async {
-    _isLoading = true;
+  /// Checkout fields
+  String deliveryAddress = "";
+  int deliverySlot = 1;
+  String paymentMethod = "COD";
+
+  // ✅ Debounce timer to prevent multiple API calls
+  Timer? _debounceTimer;
+  final Map<int, int> _pendingUpdates = {}; // cartItemId -> newQuantity
+
+  /// ================= GETTERS =================
+  List<CartItem> get cartItems => _cart?.items ?? [];
+
+  double get subtotal => summary?.subtotal ?? 0;
+  double get deliveryFee => summary?.deliveryCharge ?? 0;
+  double get discount => summary?.discount ?? 0;
+  double get total => summary?.totalAmount ?? 0;
+
+  int get itemCount => cartItems.length;
+  int get totalQuantity =>
+      cartItems.fold(0, (sum, item) => sum + item.quantity);
+
+  /// ================= LOAD CART + SUMMARY =================
+  Future<void> loadCartAndSummary() async {
+    print("🟡 loadCartAndSummary CALLED");
+    isLoading = true;
     notifyListeners();
 
-    // Simulate API call
-    await Future.delayed(const Duration(milliseconds: 500));
+    _cart = await _api.getCart();
+    print("🟢 CART LOADED: ${_cart?.items.length} items");
 
-    _cartItems = [
-      CartItem(
-        id: '1',
-        productName: 'Full Cream Milk',
-        productImage: 'assets/milk_pack.png',
-        price: 35,
-        quantity: 2,
-        unit: '500ml',
-        category: 'Milk',
-      ),
-      CartItem(
-        id: '2',
-        productName: 'Fresh Curd',
-        productImage: 'assets/curd.png',
-        price: 40,
-        quantity: 1,
-        unit: '400g',
-        category: 'Dairy',
-      ),
-      CartItem(
-        id: '3',
-        productName: 'Pure Ghee',
-        productImage: 'assets/ghee.png',
-        price: 550,
-        quantity: 1,
-        unit: '500g',
-        category: 'Dairy',
-      ),
-    ];
+    summary = await _api.getSummary();
+    print("🟢 SUMMARY LOADED: Total = ${summary?.totalAmount}");
 
-    _isLoading = false;
+    isLoading = false;
     notifyListeners();
   }
 
-  void increaseQuantity(String itemId) {
-    final index = _cartItems.indexWhere((item) => item.id == itemId);
+  /// ================= OPTIMISTIC UPDATE (Local UI Update) =================
+  void _updateLocalQuantity(int cartItemId, int newQuantity) {
+    final index = cartItems.indexWhere((e) => e.id == cartItemId);
     if (index != -1) {
-      _cartItems[index].quantity++;
+      // ✅ Update local state immediately (optimistic update)
+      _cart!.items[index] = _cart!.items[index].copyWith(quantity: newQuantity);
+
+      // ✅ Update local totals
+      _updateLocalTotals();
+
       notifyListeners();
     }
   }
 
-  void decreaseQuantity(String itemId) {
-    final index = _cartItems.indexWhere((item) => item.id == itemId);
-    if (index != -1 && _cartItems[index].quantity > 1) {
-      _cartItems[index].quantity--;
-      notifyListeners();
+  void _updateLocalTotals() {
+    if (_cart == null) return;
+
+    // Calculate new subtotal
+    double newSubtotal = 0;
+    for (var item in cartItems) {
+      newSubtotal += item.price * item.quantity;
+    }
+
+    // Update summary if exists
+    if (summary != null) {
+      summary = OrderSummary(
+        items: summary!.items,
+        subtotal: newSubtotal,
+        deliveryCharge: summary!.deliveryCharge,
+        discount: summary!.discount,
+        totalAmount: newSubtotal + summary!.deliveryCharge - summary!.discount,
+      );
     }
   }
 
-  void removeItem(String itemId) {
-    _cartItems.removeWhere((item) => item.id == itemId);
-    notifyListeners();
+  /// ================= INCREASE QUANTITY =================
+  Future<void> increaseQuantity(int cartItemId) async {
+    print("➕ Increase clicked for cart item: $cartItemId");
+
+    final index = cartItems.indexWhere((e) => e.id == cartItemId);
+    if (index == -1) return;
+
+    final item = cartItems[index];
+    final newQuantity = item.quantity + 1;
+
+    print("📊 ${item.productName}: ${item.quantity} → $newQuantity");
+
+    // ✅ Update UI immediately (optimistic update)
+    _updateLocalQuantity(cartItemId, newQuantity);
+
+    // ✅ Store pending update
+    _pendingUpdates[cartItemId] = newQuantity;
+
+    // ✅ Debounce API call
+    _debounceApiUpdate(cartItemId, item.product.id, newQuantity);
   }
 
-  void applyPromoCode(String code) {
-    _promoCode = code;
-    // Simulate promo code validation
-    if (code.toUpperCase() == 'MILK10') {
-      _discount = subtotal * 0.1; // 10% discount
-    } else if (code.toUpperCase() == 'SAVE20') {
-      _discount = 20;
+  /// ================= DECREASE QUANTITY =================
+  Future<void> decreaseQuantity(int cartItemId) async {
+    print("➖ Decrease clicked for cart item: $cartItemId");
+
+    final index = cartItems.indexWhere((e) => e.id == cartItemId);
+    if (index == -1) return;
+
+    final item = cartItems[index];
+    final currentQty = item.quantity;
+
+    if (currentQty > 1) {
+      final newQuantity = currentQty - 1;
+      print("📊 ${item.productName}: $currentQty → $newQuantity");
+
+      // ✅ Update UI immediately
+      _updateLocalQuantity(cartItemId, newQuantity);
+
+      // ✅ Store pending update
+      _pendingUpdates[cartItemId] = newQuantity;
+
+      // ✅ Debounce API call
+      _debounceApiUpdate(cartItemId, item.product.id, newQuantity);
     } else {
-      _discount = 0;
+      // ✅ Remove item if quantity is 1
+      print("🗑️ Removing item (quantity = 1)");
+      await removeItem(cartItemId);
     }
+  }
+
+  /// ================= DEBOUNCED API UPDATE =================
+  void _debounceApiUpdate(int cartItemId, int productId, int newQuantity) {
+    // Cancel previous timer
+    _debounceTimer?.cancel();
+
+    // Set new timer (500ms delay)
+    _debounceTimer = Timer(const Duration(milliseconds: 500), () async {
+      print("🔄 Syncing with backend: Product $productId, Qty $newQuantity");
+
+      isUpdating = true;
+      notifyListeners();
+
+      final success = await _api.addToCart(productId, newQuantity);
+
+      if (success) {
+        print("✅ Backend synced successfully");
+
+        // ✅ Reload summary only (not full cart to avoid flickering)
+        summary = await _api.getSummary();
+
+        // Remove from pending updates
+        _pendingUpdates.remove(cartItemId);
+      } else {
+        print("❌ Backend sync failed, reverting UI");
+
+        // ✅ Revert to previous state on failure
+        await loadCartAndSummary();
+      }
+
+      isUpdating = false;
+      notifyListeners();
+    });
+  }
+
+  /// ================= REMOVE ITEM =================
+  Future<void> removeItem(int cartItemId) async {
+    print("🗑️ Removing cart item: $cartItemId");
+
+    // ✅ Show loading for delete
+    isUpdating = true;
+    notifyListeners();
+
+    final success = await _api.removeFromCart(cartItemId);
+
+    if (success) {
+      print("✅ Item removed successfully");
+      await loadCartAndSummary();
+    } else {
+      print("❌ Failed to remove item");
+    }
+
+    isUpdating = false;
     notifyListeners();
   }
 
-  void clearCart() {
-    _cartItems.clear();
+  /// ================= CLEAR CART =================
+  Future<void> clearCart() async {
+    print("🗑️ Clearing entire cart");
+
+    isLoading = true;
+    notifyListeners();
+
+    for (var item in List.from(cartItems)) {
+      await _api.removeFromCart(item.id);
+    }
+
+    _cart?.items.clear();
+    summary = null;
+
+    isLoading = false;
+    notifyListeners();
+
+    print("✅ Cart cleared");
+  }
+
+  /// ================= PLACE ORDER =================
+  Future<bool> placeOrder() async {
+    if (deliveryAddress.isEmpty) return false;
+
+    final success = await _api.checkout(
+      address: deliveryAddress,
+      slot: deliverySlot,
+      paymentMethod: paymentMethod,
+      lat: 25.45345,
+      lng: 80.46786,
+    );
+
+    if (success) {
+      _cart?.items.clear();
+      summary = null;
+      notifyListeners();
+    }
+
+    return success;
+  }
+
+  /// ================= FETCH LOCATION =================
+  Future<void> fetchCurrentAddress() async {
+    try {
+      isLoading = true;
+      notifyListeners();
+
+      bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+      if (!serviceEnabled) {
+        isLoading = false;
+        notifyListeners();
+        return;
+      }
+
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+
+      Position position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+      );
+
+      final placemarks = await placemarkFromCoordinates(
+        position.latitude,
+        position.longitude,
+      );
+
+      if (placemarks.isNotEmpty) {
+        final p = placemarks.first;
+        deliveryAddress =
+            "${p.street}, ${p.subLocality}, ${p.locality}, ${p.postalCode}";
+      }
+    } catch (e) {
+      debugPrint("❌ Location error: $e");
+    }
+
+    isLoading = false;
     notifyListeners();
   }
 
-  double get subtotal {
-    return _cartItems.fold(0, (sum, item) => sum + item.totalPrice);
-  }
-
-  double get deliveryFee => subtotal > 200 ? 0 : 20;
-
-  double get total => subtotal + deliveryFee - discount;
-
-  int get itemCount => _cartItems.length;
-
-  int get totalQuantity {
-    return _cartItems.fold(0, (sum, item) => sum + item.quantity);
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
   }
 }

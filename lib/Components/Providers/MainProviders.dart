@@ -7,6 +7,7 @@ import '../../Auth/Firebase_service.dart';
 import '../../Core/Router/router.dart';
 import '../../Features/ViewScreens/CartScreen/CartController.dart';
 import '../../Features/ViewScreens/DailyOrderScreen/DailyController.dart';
+import '../../Features/ViewScreens/DashBoardScreen/ProductListscreen/ProductController.dart';
 import '../../Features/ViewScreens/LoginPageScreen/LoginController.dart';
 import '../../Features/ViewScreens/OrderHistoryScreen/OrderHistoryController.dart';
 import '../../Features/ViewScreens/OtpScreen/OtpController.dart';
@@ -57,6 +58,7 @@ class _MainprovidersState extends State<Mainproviders> {
         ChangeNotifierProvider(create: (_) => DashboardController()),
         ChangeNotifierProvider(create: (_) => LocationProvider()),
         ChangeNotifierProvider(create: (_) => OrderHistoryController()),
+        ChangeNotifierProvider(create: (_) => ProductController()), // Add this
 
 
 

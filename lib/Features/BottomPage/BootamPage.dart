@@ -1,13 +1,12 @@
+import 'package:consumerbalinee/Features/ViewScreens/CartScreen/CartController.dart';
 import 'package:consumerbalinee/Features/ViewScreens/DailyOrderScreen/DailyOrderScreen.dart';
 import 'package:consumerbalinee/Features/ViewScreens/ProfileScreen/ProfileScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../Core/Constant/app_colors.dart';
-import '../ViewScreens/CartScreen/CartProvider.dart';
 import '../ViewScreens/CartScreen/CartScreen.dart';
 import '../ViewScreens/DashBoardScreen/DashboardScreeen.dart';
-import '../ViewScreens/OrderHistoryScreen/OrderHistoryProvider.dart';
 import '../ViewScreens/OrderHistoryScreen/OrderHistoryScreen.dart';
 import 'MainNavigator.dart';
 
@@ -17,7 +16,10 @@ class MainWrapperScreen extends StatelessWidget {
   final List<Widget> _screens = [
     DashboardView(), // Your dashboard screen
     DailyOrderView(), // Create this screen
-    CartView(), // Create this screen
+    ChangeNotifierProvider(
+      create: (_) => CartController()..loadCartAndSummary(),
+      child: const CartView(),
+    ),
     OrderHistoryView(), // Create this screen
     Profilescreen(), // Create this screen
   ];
@@ -41,7 +43,10 @@ class MainWrapperScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildModernBottomNavBar(BuildContext context, MainNavigationController controller) {
+  Widget _buildModernBottomNavBar(
+    BuildContext context,
+    MainNavigationController controller,
+  ) {
     return Container(
       height: 80,
       decoration: BoxDecoration(
@@ -49,8 +54,8 @@ class MainWrapperScreen extends StatelessWidget {
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(12),
           topRight: Radius.circular(12),
-            // bottomLeft: Radius.circular(12),
-            // bottomRight: Radius.circular(12)
+          // bottomLeft: Radius.circular(12),
+          // bottomRight: Radius.circular(12)
         ),
         boxShadow: [
           BoxShadow(
@@ -87,7 +92,7 @@ class MainWrapperScreen extends StatelessWidget {
                 icon: Icons.shopping_cart_rounded,
                 label: 'Carts',
                 showBadge: true,
-                badgeCount: 3,
+                // badgeCount: 3,
               ),
               _buildNavItem(
                 context,
@@ -111,14 +116,14 @@ class MainWrapperScreen extends StatelessWidget {
   }
 
   Widget _buildNavItem(
-      BuildContext context,
-      MainNavigationController controller, {
-        required int index,
-        required IconData icon,
-        required String label,
-        bool showBadge = false,
-        int badgeCount = 0,
-      }) {
+    BuildContext context,
+    MainNavigationController controller, {
+    required int index,
+    required IconData icon,
+    required String label,
+    bool showBadge = false,
+    int badgeCount = 0,
+  }) {
     final isSelected = controller.currentIndex == index;
 
     return GestureDetector(
@@ -126,7 +131,9 @@ class MainWrapperScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? Colors.white.withOpacity(0.1) : Colors.transparent,
+          color: isSelected
+              ? Colors.white.withOpacity(0.1)
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -171,7 +178,7 @@ class MainWrapperScreen extends StatelessWidget {
             Text(
               label,
               style: TextStyle(
-                color: isSelected ? Colors.white: Colors.grey[600],
+                color: isSelected ? Colors.white : Colors.white70,
                 fontSize: 11,
                 fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
               ),

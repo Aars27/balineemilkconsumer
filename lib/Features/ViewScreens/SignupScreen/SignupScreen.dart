@@ -1,8 +1,13 @@
+import 'package:consumerbalinee/Features/ViewScreens/LoginPageScreen/LoginView.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart'; // go_router import
+import 'package:provider/provider.dart'; // Assuming you use Provider
 
-import '../../../Core/Constant/ApiServices.dart';
 import '../../../Core/Constant/app_colors.dart';
-import 'SignupModal.dart';
+import 'SignupControllar.dart';
+
+
+
 
 class CreateAccountScreen extends StatefulWidget {
   const CreateAccountScreen({super.key});
@@ -12,19 +17,39 @@ class CreateAccountScreen extends StatefulWidget {
 }
 
 class _CreateAccountScreenState extends State<CreateAccountScreen> {
+  // We will manage state locally, but call controller for submit
   final nameController = TextEditingController();
   final mobileController = TextEditingController();
   final addressController = TextEditingController();
   final lastNameController = TextEditingController();
 
+  // New Role IDs: 5 = Consumer (Default), 4 = Retailer, 3 = Wholesaler
+  int selectedRole = 5;
 
-  int selectedRole = 3; // 3 = Consumer, 2 = Retailer, 1 = Wholesaler
+  @override
+  void initState() {
+    super.initState();
+    // Initialize controllers from a context if using Provider
+    // For simplicity, we keep them local here.
+  }
+
+  @override
+  void dispose() {
+    nameController.dispose();
+    mobileController.dispose();
+    addressController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Access the controller if it's managed by Provider
+    // final controller = context.watch<SignupController>();
+
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
+        // ... AppBar code ...
         elevation: 0,
         backgroundColor: Colors.white,
         leading: IconButton(
@@ -43,30 +68,17 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              // ... Full Name, Last Name, Phone Number TextFields ...
               const Text("Full Name",
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               const SizedBox(height: 6),
-
-              // ---------------- FULL NAME ----------------
-              TextField(
-                controller: nameController,
-                decoration: _inputDecoration("Enter your name"),
-              ),
-
+              TextField(controller: nameController, decoration: _inputDecoration("Enter your name")),
               const SizedBox(height: 18),
               const Text("Last Name",
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               const SizedBox(height: 6),
-
-
-              TextField(
-                controller: lastNameController,
-                decoration: _inputDecoration("Enter your last name"),
-              ),
+              TextField(controller: lastNameController, decoration: _inputDecoration("Enter your last name")),
               const SizedBox(height: 18),
-
-              // ---------------- MOBILE NUMBER ----------------
-
               const Text("Phone Number",
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               const SizedBox(height: 6),
@@ -74,32 +86,31 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                 controller: mobileController,
                 keyboardType: TextInputType.number,
                 maxLength: 10,
-                decoration: _inputDecoration("10 digit mobile number")
-                    .copyWith(counterText: ""),
+                decoration: _inputDecoration("10 digit mobile number").copyWith(counterText: ""),
               ),
-
               const SizedBox(height: 18),
               const Text("User Type",
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),
               const SizedBox(height: 12),
 
-              // ---------------- USER TYPE BUTTONS ----------------
+              // ---------------- USER TYPE BUTTONS (Updated Role IDs) ----------------
               Row(
                 children: [
-                  _roleButton("Consumer", 3, AppColors.gradientEnd),
+                  // Consumer: 5
+                  _roleButton("Consumer", 5, AppColors.gradientEnd),
                   const SizedBox(width: 10),
-                  _roleButton("Retailer", 2, Colors.grey.shade200),
+                  // Retailer: 4
+                  _roleButton("Retailer", 4, Colors.grey.shade200),
                   const SizedBox(width: 10),
-                  _roleButton("Wholesaler", 1, Colors.grey.shade200),
+                  // Wholesaler: 3
+                  _roleButton("Wholesaler", 3, Colors.grey.shade200),
                 ],
               ),
-
+              // ... rest of the fields ...
               const SizedBox(height: 22),
               const Text("Delivery Address",
                   style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500)),
               const SizedBox(height: 6),
-
-              // ---------------- ADDRESS FIELD ----------------
               TextField(
                 controller: addressController,
                 maxLines: 3,
@@ -116,6 +127,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
                   height: 50,
                   child: ElevatedButton(
                     onPressed: () {
+                      // Call the local submit function which uses the Controller's logic
                       _submitForm(context);
                     },
                     style: ElevatedButton.styleFrom(
@@ -138,7 +150,10 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
               Center(
                 child: GestureDetector(
                   onTap: () {
-                    Navigator.pushNamed(context, "/login");
+                    // Use go_router for consistency
+                    // context.go('/login');
+
+                    Navigator.push(context,MaterialPageRoute(builder: (context)=>LoginScreen()));
                   },
                   child: const Text(
                     "Already have an account? Login",
@@ -162,6 +177,7 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   // SHARED INPUT DECORATION
   // ------------------------------------------------
   InputDecoration _inputDecoration(String hint) {
+    // ... same as before
     return InputDecoration(
       hintText: hint,
       filled: true,
@@ -187,7 +203,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
       child: GestureDetector(
         onTap: () {
           setState(() {
-            selectedRole = role;
+            selectedRole = role; // Update the local state
+            // If using Provider, you might also call:
+            // context.read<SignupController>().updateRole(role);
           });
         },
         child: Container(
@@ -204,9 +222,9 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? Colors.white : Colors.black,
-              fontWeight: FontWeight.w600,
-              fontSize: 12
+                color: isSelected ? Colors.white : Colors.black,
+                fontWeight: FontWeight.w600,
+                fontSize: 12
             ),
           ),
         ),
@@ -215,61 +233,21 @@ class _CreateAccountScreenState extends State<CreateAccountScreen> {
   }
 
   // ------------------------------------------------
-  // SUBMIT (CALL API)
+  // SUBMIT (Call Controller)
   // ------------------------------------------------
-  void _submitForm(BuildContext context) async {
-    if (nameController.text.isEmpty ||
-        lastNameController.text.isEmpty ||
-        mobileController.text.isEmpty ||
-        addressController.text.isEmpty) {
+  void _submitForm(BuildContext context) {
+    // This is a simplified local submission that uses the original logic
+    // but relies on the updated SignupController for the final API call.
 
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("All fields are required")));
-      return;
-    }
+    final controller = SignupController(); // A temporary instance, ideally use Provider
 
-    if (mobileController.text.length != 10) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(const SnackBar(content: Text("Invalid mobile number")));
-      return;
-    }
+    // Manually setting controller values based on local state (Not ideal for Provider architecture)
+    // If you were using Provider, you'd only call controller.createAccount(context);
+    controller.nameController.text = nameController.text;
+    controller.mobileController.text = mobileController.text;
+    controller.addressController.text = addressController.text;
+    controller.selectedRole = selectedRole;
 
-    try {
-      // Create request data as Map
-      final requestData = {
-        "first_name": nameController.text.trim(),
-        "last_name": lastNameController.text.trim(),
-        "mobile_no": mobileController.text.trim(),
-        "role_id": selectedRole,
-        "address": addressController.text.trim(),
-      };
-
-      // Call API and get Map response
-      final responseData = await ApiService().signup(requestData);
-
-      // Convert to SignupResponse model
-      final response = SignupResponse.fromJson(responseData);
-
-      if (response.flag) {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(response.message)));
-
-        // Navigate to OTP screen
-        Navigator.pushNamed(context, "/otp", arguments: mobileController.text.trim());
-      } else {
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text(response.message)));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
-    }
+    controller.createAccount(context);
   }
-
-
-
 }
-
-
-
-

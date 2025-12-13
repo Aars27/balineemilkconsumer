@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../Core/Constant/ApiServices.dart';
+import '../LoginPageScreen/LoginView.dart';
 import 'SignupModal.dart';
 
 class SignupController extends ChangeNotifier {
@@ -8,7 +9,8 @@ class SignupController extends ChangeNotifier {
   final mobileController = TextEditingController();
   final addressController = TextEditingController();
 
-  int selectedRole = 3; // default Consumer
+  // Updated Default Role ID: 5 = Consumer, 4 = Retailer, 3 = Wholesaler
+  int selectedRole = 5; // Default Consumer
   bool isLoading = false;
 
   void updateRole(int role) {
@@ -45,7 +47,7 @@ class SignupController extends ChangeNotifier {
         "first_name": firstName,
         "last_name": lastName,
         "mobile_no": mobile,
-        "role_id": selectedRole,
+        "role_id": selectedRole, // Dynamically sends 5, 4, or 3
         "address": address,
       };
 
@@ -58,9 +60,11 @@ class SignupController extends ChangeNotifier {
       if (response.flag) {
         _msg(context, response.message);
 
-        // NEXT STEP → Go to OTP page
-        // Navigator.pushNamed(context, "/otp", arguments: mobile);
-        context.go('/login');
+        //  FIXED: context.go() with 'extra' to pass mobile number
+        // Assumes your OTP route is '/otp_screen'
+        // context.go('/otp_screen', extra: mobile);
+        Navigator.push(context,MaterialPageRoute(builder: (context)=>LoginScreen()));
+
       } else {
         _msg(context, response.message);
       }
@@ -85,4 +89,3 @@ class SignupController extends ChangeNotifier {
     super.dispose();
   }
 }
-

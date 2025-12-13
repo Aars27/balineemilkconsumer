@@ -1,18 +1,17 @@
+// import 'package:flutter/cupertino.dart';
+// import 'package:provider/provider.dart';
 
-import 'package:flutter/cupertino.dart';
-import 'package:provider/provider.dart';
+// import 'CartController.dart';
+// import 'CartScreen.dart';
 
-import 'CartController.dart';
-import 'CartScreen.dart';
+// class Cartscreen extends StatelessWidget {
+//   const Cartscreen({super.key});
 
-class Cartscreen extends StatelessWidget {
-  const Cartscreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => CartController(),
-      child: const CartView(),
-    );
-  }
-}
+//   @override
+//   Widget build(BuildContext context) {
+//     return ChangeNotifierProvider(
+//       create: (_) => CartController()..loadCartAndSummary(),
+//       child: const CartView(),
+//     );
+//   }
+// }

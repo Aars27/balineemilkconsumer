@@ -1,3 +1,5 @@
+// lib/Features/ViewScreens/Dashboard/DashboardView.dart
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -7,6 +9,7 @@ import '../../../Components/Savetoken/utils_local_storage.dart';
 import 'ControllerDashboard.dart';
 import 'BestSellerModal/Best_Sellar_Modal.dart';
 import 'CategoryModal/CategoryModal.dart';
+import 'ProductListscreen/ProductList.dart';
 
 
 class DashboardView extends StatefulWidget {
@@ -571,7 +574,7 @@ class BestSellerCard extends StatelessWidget {
 
 //
 // -----------------------------------------------------------
-// CATEGORY CARD
+// CATEGORY CARD WITH NAVIGATION
 // -----------------------------------------------------------
 //
 class CategoryCard extends StatelessWidget {
@@ -584,52 +587,68 @@ class CategoryCard extends StatelessWidget {
         ? "https://balinee.pmmsapp.com/${category.image}"
         : null;
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          height: 70,
-          width: 70,
-          padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(50),
-            color: Colors.white,
-            border: Border.all(color: Colors.grey.shade200),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.05),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
-              ),
-            ],
+    return GestureDetector(
+      onTap: () {
+        print("\n🔄 CATEGORY CLICKED!");
+        print("Category Name: ${category.name}");
+        print("Category ID: ${category.id}");
+        print("Navigating to Product List Screen...\n");
+
+        // Navigate to Product List Screen
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductListScreen(category: category),
           ),
-          child: imageUrl != null
-              ? Image.network(
-            imageUrl,
-            fit: BoxFit.contain,
-            loadingBuilder: (context, child, loadingProgress) {
-              if (loadingProgress == null) return child;
-              return const Center(child: CircularProgressIndicator());
-            },
-            errorBuilder: (context, error, stackTrace) {
-              print("❌ Category image error for ${category.name}: $error");
-              return const Icon(Icons.category, size: 32, color: Colors.grey);
-            },
-          )
-              : const Icon(Icons.category, size: 32, color: Colors.grey),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          category.name,
-          style: const TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
+        );
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            height: 70,
+            width: 70,
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(50),
+              color: Colors.white,
+              border: Border.all(color: Colors.grey.shade200),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.05),
+                  blurRadius: 6,
+                  offset: const Offset(0, 2),
+                ),
+              ],
+            ),
+            child: imageUrl != null
+                ? Image.network(
+              imageUrl,
+              fit: BoxFit.contain,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return const Center(child: CircularProgressIndicator());
+              },
+              errorBuilder: (context, error, stackTrace) {
+                print("❌ Category image error for ${category.name}: $error");
+                return const Icon(Icons.category, size: 32, color: Colors.grey);
+              },
+            )
+                : const Icon(Icons.category, size: 32, color: Colors.grey),
           ),
-          textAlign: TextAlign.center,
-          maxLines: 2,
-          overflow: TextOverflow.ellipsis,
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            category.name,
+            style: const TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w500,
+            ),
+            textAlign: TextAlign.center,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
     );
   }
 }

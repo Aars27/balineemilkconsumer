@@ -1,6 +1,6 @@
 class AppImages {
   // App Logo
-  static const String appLogo = 'assets/fake.jpg';
+  static const String appLogo = 'assets/Balinee-milk.gif';
 
   // Onboarding Images
   static const String onboard1 = 'assets/onboarding1.gif';

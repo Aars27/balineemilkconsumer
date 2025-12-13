@@ -1,10 +1,12 @@
 import 'package:consumerbalinee/Components/Savetoken/utils_local_storage.dart';
+import "package:consumerbalinee/Features/ViewScreens/CartScreen/CartScreen.dart";
 import "package:consumerbalinee/Features/ViewScreens/LoginPageScreen/LoginView.dart";
 import "package:consumerbalinee/Features/ViewScreens/OnboardingScreen/Onboarding_Screen.dart";
 import "package:consumerbalinee/Features/ViewScreens/SplashScreen/SplashView/SplashScreen.dart";
 import "package:go_router/go_router.dart";
-import "../../Features/NotificationScreen/NotificationScreen.dart";
+
 import "../../Features/BottomPage/BootamPage.dart";
+import "../../Features/NotificationScreen/NotificationScreen.dart";
 
 final GoRouter AppRouter = GoRouter(
   initialLocation: '/',
@@ -38,10 +40,7 @@ final GoRouter AppRouter = GoRouter(
   },
 
   routes: [
-    GoRoute(
-      path: '/',
-      builder: (context, state) => const Splashscreen(),
-    ),
+    GoRoute(path: '/', builder: (context, state) => const Splashscreen()),
     GoRoute(
       path: '/onboarding',
       builder: (context, state) => const OnboardingScreen(),
@@ -58,5 +57,12 @@ final GoRouter AppRouter = GoRouter(
       path: '/notification',
       builder: (context, state) => NotificationScreen(),
     ),
+
+    // ✅ FIX: Remove ChangeNotifierProvider from here
+    // Global provider already exists in Mainproviders.dart
+    GoRoute(
+  path: '/cart',
+  builder: (context, state) => const CartView(), // ← Use GLOBAL instance
+)
   ],
 );

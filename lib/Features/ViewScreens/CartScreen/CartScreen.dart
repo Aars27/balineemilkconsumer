@@ -1,101 +1,201 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
-
-// ==================== VIEW ====================
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 
 import 'CartController.dart';
 import 'CartModal.dart';
 
-
-
-class CartView extends StatelessWidget {
+class CartView extends StatefulWidget {
   const CartView({super.key});
+
+  @override
+  State<CartView> createState() => _CartViewState();
+}
+
+class _CartViewState extends State<CartView> {
+  Timer? _debounceTimer;
+  bool _hasLoadedOnce = false;
+
+  @override
+  void initState() {
+    super.initState();
+    print("🟢 CartView initState called");
+    _loadCartDebounced();
+  }
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    //  Only reload if not already loaded in initState
+    if (_hasLoadedOnce) {
+      print("🔄 CartView didChangeDependencies - Reloading cart");
+      _loadCartDebounced();
+    }
+  }
+
+  //  Debounced loading to prevent multiple rapid API calls
+  void _loadCartDebounced() {
+    _debounceTimer?.cancel();
+    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        print("🟢 Loading cart data...");
+        context.read<CartController>().loadCartAndSummary();
+        _hasLoadedOnce = true;
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _debounceTimer?.cancel();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<CartController>();
 
+    print("🟢 Building CartView - isLoading: ${controller.isLoading}");
+    print("🟢 Cart items count: ${controller.cartItems.length}");
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: Stack(
-        children: [
-          // Background Vector Image
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 200,
-              decoration: const BoxDecoration(
-                image: DecorationImage(
-                  image: AssetImage('assets/Vector.png'),
-                  fit: BoxFit.cover,
+      body: RefreshIndicator(
+        // ✅ Pull to refresh functionality
+        onRefresh: () async {
+          await context.read<CartController>().loadCartAndSummary();
+        },
+        child: Stack(
+          children: [
+            // Background Vector Image
+            Positioned(
+              top: 0,
+              left: 0,
+              right: 0,
+              child: Container(
+                height: 200,
+                decoration: const BoxDecoration(
+                  image: DecorationImage(
+                    image: AssetImage('assets/Vector.png'),
+                    fit: BoxFit.cover,
+                  ),
                 ),
               ),
             ),
-          ),
 
-          // Main Content
-          Column(
-            children: [
-              // Custom App Bar
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                  child: Row(
-                    children: [
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'My Cart',
-                            style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.grey[800],
+            // Main Content
+            Column(
+              children: [
+                // Custom App Bar
+                SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Row(
+                      children: [
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'My Cart',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                              ),
                             ),
-                          ),
-                          Text(
-                            '${controller.totalQuantity} items',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
+                            Text(
+                              '${controller.totalQuantity} items',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: Colors.grey[600],
+                              ),
                             ),
-                          ),
-                        ],
-                      ),
-                      const Spacer(),
-                      if (controller.itemCount > 0)
+                          ],
+                        ),
+                        const Spacer(),
+
+                        // ✅ Manual Refresh Button
                         IconButton(
                           icon: Icon(
-                            Icons.delete_outline,
-                            color: Colors.red[400],
-                            size: 28,
+                            Icons.refresh,
+                            color: Colors.grey[700],
+                            size: 26,
                           ),
                           onPressed: () {
-                            _showClearCartDialog(context, controller);
+                            context.read<CartController>().loadCartAndSummary();
                           },
                         ),
+
+                        if (controller.itemCount > 0)
+                          IconButton(
+                            icon: Icon(
+                              Icons.delete_outline,
+                              color: Colors.red[400],
+                              size: 28,
+                            ),
+                            onPressed: () {
+                              _showClearCartDialog(context, controller);
+                            },
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // Content Area
+                Expanded(
+                  child: controller.isLoading
+                      ? const Center(child: CircularProgressIndicator())
+                      : controller.cartItems.isEmpty
+                      ? _buildEmptyCart(context)
+                      : _buildCartContent(context, controller),
+                ),
+              ],
+            ),
+
+            // ✅ Small updating indicator
+            if (controller.isUpdating)
+              Positioned(
+                top: 100,
+                right: 20,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.black87,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 14,
+                        height: 14,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Updating...',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
                     ],
                   ),
                 ),
               ),
-
-              // Content Area
-              Expanded(
-                child: controller.isLoading
-                    ? const Center(child: CircularProgressIndicator())
-                    : controller.cartItems.isEmpty
-                    ? _buildEmptyCart(context)
-                    : _buildCartContent(context, controller),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: controller.cartItems.isEmpty
-          ? null
-          : _buildCheckoutButton(context, controller),
+      bottomNavigationBar:
+      (controller.cartItems.isNotEmpty || controller.summary != null)
+          ? _buildCheckoutButton(context, controller)
+          : null,
     );
   }
 
@@ -121,15 +221,12 @@ class CartView extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             'Add some items to get started!',
-            style: TextStyle(
-              fontSize: 15,
-              color: Colors.grey[500],
-            ),
+            style: TextStyle(fontSize: 15, color: Colors.grey[500]),
           ),
           const SizedBox(height: 32),
           ElevatedButton(
             onPressed: () {
-              Navigator.pop(context);
+              context.go('/bottombar');
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF4A90E2),
@@ -154,19 +251,24 @@ class CartView extends StatelessWidget {
 
   Widget _buildCartContent(BuildContext context, CartController controller) {
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
 
-          // Cart Items List
-          ...controller.cartItems.map((item) => CartItemCard(item: item)),
+          /// CART ITEMS
+          if (controller.cartItems.isNotEmpty)
+            ...controller.cartItems.map((item) => CartItemCard(item: item)),
 
           const SizedBox(height: 24),
 
-          // Bill Summary
-          _buildBillSummary(context, controller),
+          /// BILL SUMMARY
+          if (controller.summary != null)
+            _buildBillSummary(context, controller)
+          else
+            const Center(child: CircularProgressIndicator()),
 
           const SizedBox(height: 120),
         ],
@@ -174,8 +276,16 @@ class CartView extends StatelessWidget {
     );
   }
 
-
   Widget _buildBillSummary(BuildContext context, CartController controller) {
+    if (controller.summary == null) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
@@ -194,62 +304,34 @@ class CartView extends StatelessWidget {
         children: [
           const Text(
             'Bill Summary',
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: Colors.black87,
-            ),
+            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 16),
+
           _buildBillRow('Subtotal', controller.subtotal),
           const SizedBox(height: 12),
+
           _buildBillRow('Delivery Fee', controller.deliveryFee),
-          if (controller.discount > 0) ...[
-            const SizedBox(height: 12),
-            _buildBillRow('Discount', -controller.discount,
-                color: Colors.green),
-          ],
           const SizedBox(height: 12),
-          if (controller.deliveryFee == 0)
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF4CAF50).withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    size: 16,
-                    color: const Color(0xFF4CAF50),
-                  ),
-                  const SizedBox(width: 6),
-                  Text(
-                    'Free delivery on orders above ₹200',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: const Color(0xFF4CAF50),
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ],
-              ),
+
+          if (controller.discount > 0) ...[
+            _buildBillRow(
+              'Discount',
+              -controller.discount,
+              color: Colors.green,
             ),
-          const SizedBox(height: 16),
-          Divider(color: Colors.grey[300]),
-          const SizedBox(height: 16),
+            const SizedBox(height: 12),
+          ],
+
+          const Divider(),
+          const SizedBox(height: 12),
+
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
                 'Total',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black87,
-                ),
+                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
               ),
               Text(
                 '₹${controller.total.toStringAsFixed(2)}',
@@ -270,13 +352,7 @@ class CartView extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 15,
-            color: Colors.grey[700],
-          ),
-        ),
+        Text(label, style: TextStyle(fontSize: 15, color: Colors.grey[700])),
         Text(
           '₹${amount.toStringAsFixed(2)}',
           style: TextStyle(
@@ -311,10 +387,7 @@ class CartView extends StatelessWidget {
               children: [
                 Text(
                   'Total Amount',
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -373,10 +446,7 @@ class CartView extends StatelessWidget {
               controller.clearCart();
               Navigator.pop(context);
             },
-            child: const Text(
-              'Clear',
-              style: TextStyle(color: Colors.red),
-            ),
+            child: const Text('Clear', style: TextStyle(color: Colors.red)),
           ),
         ],
       ),
@@ -384,75 +454,191 @@ class CartView extends StatelessWidget {
   }
 
   void _showCheckoutBottomSheet(
-      BuildContext context, CartController controller) {
+      BuildContext context,
+      CartController controller,
+      ) {
+    final addressCtrl = TextEditingController(text: controller.deliveryAddress);
+
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) => Container(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Icon(
-              Icons.check_circle,
-              size: 64,
-              color: const Color(0xFF4CAF50),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'Order Confirmed!',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Your order has been placed successfully',
-              style: TextStyle(
-                fontSize: 14,
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: () {
-                  Navigator.pop(context);
-                  Navigator.pop(context);
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF4A90E2),
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(12),
+      builder: (context) {
+        return Padding(
+          padding: EdgeInsets.only(
+            left: 20,
+            right: 20,
+            top: 20,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 20,
+          ),
+          child: SingleChildScrollView(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Center(
+                  child: Container(
+                    width: 40,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.grey[300],
+                      borderRadius: BorderRadius.circular(2),
+                    ),
                   ),
                 ),
-                child: const Text(
-                  'Back to Home',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white,
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Order Summary",
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 12),
+
+                if (controller.summary == null)
+                  const Center(
+                    child: Padding(
+                      padding: EdgeInsets.all(20),
+                      child: CircularProgressIndicator(),
+                    ),
+                  )
+                else ...[
+                  ...controller.summary!.items.map(
+                        (e) => _summaryRow("${e.productName} x${e.qty}", e.amount),
+                  ),
+
+                  const Divider(height: 30),
+                  _summaryRow("Subtotal", controller.subtotal),
+                  _summaryRow("Delivery", controller.deliveryFee),
+                  _summaryRow("Discount", -controller.discount),
+                  const Divider(height: 30),
+                  _summaryRow("Total", controller.total, isBold: true),
+                ],
+
+                const SizedBox(height: 24),
+
+                const Text(
+                  "Delivery Address",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+
+                TextField(
+                  controller: addressCtrl,
+                  maxLines: 2,
+                  decoration: InputDecoration(
+                    hintText: "Enter delivery address",
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    suffixIcon: IconButton(
+                      icon: const Icon(Icons.my_location),
+                      onPressed: () {
+                        addressCtrl.text = "Vikas Khand, Gomtinagar, Jaipur";
+                      },
+                    ),
                   ),
                 ),
-              ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Delivery Slot",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+
+                DropdownButtonFormField<int>(
+                  value: controller.deliverySlot,
+                  items: const [
+                    DropdownMenuItem(value: 1, child: Text("Morning (6–9 AM)")),
+                    DropdownMenuItem(value: 2, child: Text("Evening (5–8 PM)")),
+                  ],
+                  onChanged: (val) {
+                    controller.deliverySlot = val!;
+                  },
+                  decoration: InputDecoration(
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 20),
+
+                const Text(
+                  "Payment Method",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 8),
+
+                RadioListTile(
+                  value: "COD",
+                  groupValue: controller.paymentMethod,
+                  onChanged: (val) {
+                    controller.paymentMethod = val!;
+                    controller.notifyListeners();
+                  },
+                  title: const Text("Cash on Delivery"),
+                ),
+
+                const SizedBox(height: 20),
+
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    onPressed: () async {
+                      final success = await controller.placeOrder();
+
+                      if (success) {
+                        if (context.canPop()) {
+                          Navigator.pop(context);
+                        }
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text("Order placed successfully"),
+                          ),
+                        );
+
+                        context.go('/bottombar');
+                      }
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF4A90E2),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                    ),
+                    child: const Text(
+                      "Confirm Order",
+                      style: TextStyle(fontSize: 16, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _summaryRow(String title, double value, {bool isBold = false}) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(title),
+          Text(
+            "₹${value.toStringAsFixed(0)}",
+            style: TextStyle(
+              fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -491,15 +677,15 @@ class CartItemCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(12),
             ),
             child: Center(
-              child: Image.asset(
+              child: Image.network(
                 item.productImage,
                 height: 60,
                 fit: BoxFit.contain,
-                errorBuilder: (context, error, stackTrace) {
-                  return Icon(
+                errorBuilder: (_, __, ___) {
+                  return const Icon(
                     Icons.local_drink,
                     size: 50,
-                    color: const Color(0xFF4A90E2),
+                    color: Color(0xFF4A90E2),
                   );
                 },
               ),
@@ -523,10 +709,7 @@ class CartItemCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   item.unit,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: Colors.grey[600],
-                  ),
+                  style: TextStyle(fontSize: 13, color: Colors.grey[600]),
                 ),
                 const SizedBox(height: 8),
                 Text(
