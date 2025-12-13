@@ -1,9 +1,13 @@
 // lib/Features/ViewScreens/Dashboard/DashboardView.dart
+// COMPLETE FILE - Replace your entire DashboardView.dart with this
 
+import 'package:consumerbalinee/Core/Constant/app_colors.dart';
+import 'package:consumerbalinee/Features/NotificationScreen/NotificationScreen.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart';
+import 'package:dio/dio.dart';
 
 import '../../../Components/Savetoken/utils_local_storage.dart';
 import 'ControllerDashboard.dart';
@@ -228,7 +232,9 @@ class _DashboardViewState extends State<DashboardView> {
                               color: Colors.black,
                               size: 24,
                             ),
-                            onPressed: () {},
+                            onPressed: () {
+                              Navigator.push(context, MaterialPageRoute(builder: (context)=>NotificationScreen()));
+                            },
                           ),
                         ],
                       ),
@@ -483,19 +489,156 @@ class _DashboardViewState extends State<DashboardView> {
 
 //
 // -----------------------------------------------------------
-// BEST SELLER CARD
+// BEST SELLER CARD WITH ADD TO CART (DIO VERSION)
 // -----------------------------------------------------------
 //
-class BestSellerCard extends StatelessWidget {
+class BestSellerCard extends StatefulWidget {
   final BestSellerModel product;
   const BestSellerCard({super.key, required this.product});
 
   @override
+  State<BestSellerCard> createState() => _BestSellerCardState();
+}
+
+class _BestSellerCardState extends State<BestSellerCard> {
+  bool _isAddingToCart = false;
+  final Dio _dio = Dio();
+
+  Future<void> _addToCart() async {
+    if (_isAddingToCart) return;
+
+    setState(() {
+      _isAddingToCart = true;
+    });
+
+    try {
+      print("\n🛒 ADDING BEST SELLER TO CART");
+      print("Product ID: ${widget.product.productId}");
+      print("Product Name: ${widget.product.name}");
+
+      final token = await LocalStorage.getApiToken();
+
+      if (token == null || token.isEmpty) {
+        throw Exception("No authentication token found");
+      }
+
+      final url = 'https://balinee.pmmsapp.com/api/cart/add';
+      final requestBody = {
+        'product_id': widget.product.productId,
+        'quantity': 1,
+      };
+
+      print("📡 API URL: $url");
+      print("📤 Request Body: $requestBody");
+
+      final response = await _dio.post(
+        url,
+        data: requestBody,
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $token',
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      print("📥 Response Status: ${response.statusCode}");
+      print("📥 Response Data: ${response.data}");
+
+      if (response.statusCode == 200) {
+        final responseData = response.data;
+
+        if (responseData['flag'] == true) {
+          print("✅ Successfully added to cart");
+
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Row(
+                  children: [
+                    const Icon(Icons.check_circle, color: Colors.white),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        responseData['message'] ?? '${widget.product.name} added to cart!',
+                      ),
+                    ),
+                  ],
+                ),
+                backgroundColor: Colors.green,
+                duration: const Duration(seconds: 2),
+                behavior: SnackBarBehavior.floating,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            );
+          }
+        } else {
+          print("❌ Failed to add to cart");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(responseData['message'] ?? 'Failed to add to cart'),
+                backgroundColor: Colors.orange,
+                duration: const Duration(seconds: 2),
+              ),
+            );
+          }
+        }
+      }
+    } on DioException catch (e) {
+      print("❌ Dio Exception: ${e.type}");
+      print("Error Message: ${e.message}");
+      print("Response: ${e.response?.data}");
+
+      if (e.response?.statusCode == 401) {
+        print("❌ Unauthorized - Token expired");
+        await LocalStorage.clearAll();
+        if (mounted) {
+          context.go('/loginpage');
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                  e.response?.data['message'] ??
+                      "Failed to add to cart (${e.response?.statusCode ?? 'Network Error'})"
+              ),
+              backgroundColor: Colors.red,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      print("❌ Exception: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Error: ${e.toString()}"),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isAddingToCart = false;
+        });
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final imageUrl = "https://balinee.pmmsapp.com/${product.image}";
+    final imageUrl = "https://balinee.pmmsapp.com/${widget.product.image}";
 
     return Container(
-      width: 150,
+      width: 180,
       margin: const EdgeInsets.only(right: 12),
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
@@ -521,23 +664,23 @@ class BestSellerCard extends StatelessWidget {
             loadingBuilder: (context, child, loadingProgress) {
               if (loadingProgress == null) return child;
               return const SizedBox(
-                height: 100,
-                width: 100,
-                child: Center(child: CircularProgressIndicator()),
+                height: 50,
+                width: 50,
+                child: Center(child: CircularProgressIndicator(strokeWidth: 2)),
               );
             },
             errorBuilder: (context, error, stackTrace) {
-              print("❌ Product image error for ${product.name}: $error");
+              print("❌ Product image error for ${widget.product.name}: $error");
               return const SizedBox(
-                height: 100,
-                width: 100,
-                child: Icon(Icons.broken_image, size: 50, color: Colors.grey),
+                height: 50,
+                width: 50,
+                child: Icon(Icons.broken_image, size: 40, color: Colors.grey),
               );
             },
           ),
           const SizedBox(height: 8),
           Text(
-            product.name,
+            widget.product.name,
             maxLines: 2,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
@@ -548,24 +691,64 @@ class BestSellerCard extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Text(
-            "₹${product.price}",
+            "₹${widget.product.price}",
             style: const TextStyle(
               color: Colors.green,
               fontWeight: FontWeight.bold,
               fontSize: 15,
             ),
           ),
-          if (product.totalSold > 0)
+          if (widget.product.totalSold > 0)
             Padding(
               padding: const EdgeInsets.only(top: 4),
               child: Text(
-                "${product.totalSold} sold",
+                "${widget.product.totalSold} sold",
                 style: TextStyle(
                   fontSize: 11,
                   color: Colors.grey[600],
                 ),
               ),
             ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            height: 32,
+            child: ElevatedButton(
+              onPressed: _isAddingToCart ? null : _addToCart,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.gradientEnd,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                elevation: 2,
+              ),
+              child: _isAddingToCart
+                  ? const SizedBox(
+                height: 16,
+                width: 16,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                ),
+              )
+                  : const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.shopping_cart, size: 14),
+                  SizedBox(width: 4),
+                  Text(
+                    'Add',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -594,7 +777,6 @@ class CategoryCard extends StatelessWidget {
         print("Category ID: ${category.id}");
         print("Navigating to Product List Screen...\n");
 
-        // Navigate to Product List Screen
         Navigator.push(
           context,
           MaterialPageRoute(

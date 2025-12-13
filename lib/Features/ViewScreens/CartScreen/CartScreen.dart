@@ -1,4 +1,4 @@
-import 'dart:async';
+import 'package:consumerbalinee/Features/BottomPage/BootamPage.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -14,42 +14,18 @@ class CartView extends StatefulWidget {
 }
 
 class _CartViewState extends State<CartView> {
-  Timer? _debounceTimer;
-  bool _hasLoadedOnce = false;
+
+
 
   @override
   void initState() {
     super.initState();
-    print("🟢 CartView initState called");
-    _loadCartDebounced();
-  }
+    print("🟢🟢🟢 CartView initState called");
 
-  @override
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    //  Only reload if not already loaded in initState
-    if (_hasLoadedOnce) {
-      print("🔄 CartView didChangeDependencies - Reloading cart");
-      _loadCartDebounced();
-    }
-  }
-
-  //  Debounced loading to prevent multiple rapid API calls
-  void _loadCartDebounced() {
-    _debounceTimer?.cancel();
-    _debounceTimer = Timer(const Duration(milliseconds: 300), () {
-      if (mounted) {
-        print("🟢 Loading cart data...");
-        context.read<CartController>().loadCartAndSummary();
-        _hasLoadedOnce = true;
-      }
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      print("🟢🟢🟢 Loading cart data...");
+      context.read<CartController>().loadCartAndSummary();
     });
-  }
-
-  @override
-  void dispose() {
-    _debounceTimer?.cancel();
-    super.dispose();
   }
 
   @override
@@ -61,139 +37,84 @@ class _CartViewState extends State<CartView> {
 
     return Scaffold(
       backgroundColor: const Color(0xFFF5F5F5),
-      body: RefreshIndicator(
-        // ✅ Pull to refresh functionality
-        onRefresh: () async {
-          await context.read<CartController>().loadCartAndSummary();
-        },
-        child: Stack(
-          children: [
-            // Background Vector Image
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: Container(
-                height: 200,
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/Vector.png'),
-                    fit: BoxFit.cover,
-                  ),
+      body: Stack(
+        children: [
+          // Background Vector Image
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              height: 200,
+              decoration: const BoxDecoration(
+                image: DecorationImage(
+                  image: AssetImage('assets/Vector.png'),
+                  fit: BoxFit.cover,
                 ),
               ),
             ),
+          ),
 
-            // Main Content
-            Column(
-              children: [
-                // Custom App Bar
-                SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-                    child: Row(
-                      children: [
-                        Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'My Cart',
-                              style: TextStyle(
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.grey[800],
-                              ),
+          // Main Content
+          Column(
+            children: [
+              // Custom App Bar
+              SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                  child: Row(
+                    children: [
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'My Cart',
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.grey[800],
                             ),
-                            Text(
-                              '${controller.totalQuantity} items',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.grey[600],
-                              ),
+                          ),
+                          Text(
+                            '${controller.totalQuantity} items',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Colors.grey[600],
                             ),
-                          ],
-                        ),
-                        const Spacer(),
-
-                        // ✅ Manual Refresh Button
+                          ),
+                        ],
+                      ),
+                      const Spacer(),
+                      if (controller.itemCount > 0)
                         IconButton(
                           icon: Icon(
-                            Icons.refresh,
-                            color: Colors.grey[700],
-                            size: 26,
+                            Icons.delete_outline,
+                            color: Colors.red[400],
+                            size: 28,
                           ),
                           onPressed: () {
-                            context.read<CartController>().loadCartAndSummary();
+                            _showClearCartDialog(context, controller);
                           },
                         ),
-
-                        if (controller.itemCount > 0)
-                          IconButton(
-                            icon: Icon(
-                              Icons.delete_outline,
-                              color: Colors.red[400],
-                              size: 28,
-                            ),
-                            onPressed: () {
-                              _showClearCartDialog(context, controller);
-                            },
-                          ),
-                      ],
-                    ),
-                  ),
-                ),
-
-                // Content Area
-                Expanded(
-                  child: controller.isLoading
-                      ? const Center(child: CircularProgressIndicator())
-                      : controller.cartItems.isEmpty
-                      ? _buildEmptyCart(context)
-                      : _buildCartContent(context, controller),
-                ),
-              ],
-            ),
-
-            // ✅ Small updating indicator
-            if (controller.isUpdating)
-              Positioned(
-                top: 100,
-                right: 20,
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black87,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      SizedBox(
-                        width: 14,
-                        height: 14,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.white,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Updating...',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
                     ],
                   ),
                 ),
               ),
-          ],
-        ),
+
+              // Content Area
+              Expanded(
+                child: controller.isLoading
+                    ? const Center(child: CircularProgressIndicator())
+                    : controller.cartItems.isEmpty
+                    ? _buildEmptyCart(context)
+                    : _buildCartContent(context, controller),
+              ),
+            ],
+          ),
+        ],
       ),
       bottomNavigationBar:
-      (controller.cartItems.isNotEmpty || controller.summary != null)
+          (controller.cartItems.isNotEmpty || controller.summary != null)
           ? _buildCheckoutButton(context, controller)
           : null,
     );
@@ -251,7 +172,6 @@ class _CartViewState extends State<CartView> {
 
   Widget _buildCartContent(BuildContext context, CartController controller) {
     return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -453,10 +373,12 @@ class _CartViewState extends State<CartView> {
     );
   }
 
+
+
   void _showCheckoutBottomSheet(
-      BuildContext context,
-      CartController controller,
-      ) {
+    BuildContext context,
+    CartController controller,
+  ) {
     final addressCtrl = TextEditingController(text: controller.deliveryAddress);
 
     showModalBottomSheet(
@@ -504,7 +426,7 @@ class _CartViewState extends State<CartView> {
                   )
                 else ...[
                   ...controller.summary!.items.map(
-                        (e) => _summaryRow("${e.productName} x${e.qty}", e.amount),
+                    (e) => _summaryRow("${e.productName} x${e.qty}", e.amount),
                   ),
 
                   const Divider(height: 30),
@@ -548,24 +470,6 @@ class _CartViewState extends State<CartView> {
                 ),
                 const SizedBox(height: 8),
 
-                DropdownButtonFormField<int>(
-                  value: controller.deliverySlot,
-                  items: const [
-                    DropdownMenuItem(value: 1, child: Text("Morning (6–9 AM)")),
-                    DropdownMenuItem(value: 2, child: Text("Evening (5–8 PM)")),
-                  ],
-                  onChanged: (val) {
-                    controller.deliverySlot = val!;
-                  },
-                  decoration: InputDecoration(
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-
                 const Text(
                   "Payment Method",
                   style: TextStyle(fontWeight: FontWeight.bold),
@@ -600,8 +504,8 @@ class _CartViewState extends State<CartView> {
                             content: Text("Order placed successfully"),
                           ),
                         );
-
-                        context.go('/bottombar');
+Navigator.push(context, MaterialPageRoute(builder: (context)=>MainWrapperScreen()));
+                        // context.go('/bottombar');
                       }
                     },
                     style: ElevatedButton.styleFrom(

@@ -5,6 +5,7 @@ import '../../../Components/Savetoken/utils_local_storage.dart';
 import '../../../Core/Constant/app_colors.dart'; // Ensure this path is correct
 
 // Import the new screens
+import '../../NotificationScreen/NotificationScreen.dart';
 import 'EditScreen.dart' hide AppColors;
 import 'Helpandsupport.dart';
 import 'PrivacyPolicy.dart';
@@ -84,14 +85,29 @@ class _ProfilescreenState extends State<Profilescreen> {
                 children: [
                   // Header
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 30),
-                    child: Text(
-                      'Profile',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.grey[800],
-                      ),
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 30),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Profile',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.grey[800],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(
+                            Icons.notifications_outlined,
+                            color: Colors.black,
+                            size: 24,
+                          ),
+                          onPressed: () {
+                            Navigator.push(context, MaterialPageRoute(builder: (context)=>NotificationScreen()));
+                          },
+                        ),
+                      ],
                     ),
                   ),
 

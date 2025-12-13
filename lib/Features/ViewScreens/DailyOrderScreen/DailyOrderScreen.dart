@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../NotificationScreen/NotificationScreen.dart';
 import 'DailyController.dart';
 import 'DailyModal.dart';
 
@@ -55,24 +56,40 @@ class _DailyOrderViewState extends State<DailyOrderView> {
                 flexibleSpace: FlexibleSpaceBar(
                   background: Padding(
                     padding: const EdgeInsets.fromLTRB(20, 30, 20, 20),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Daily Orders',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.grey[800],
-                          ),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Daily Orders',
+                              style: TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                                color: Colors.grey[800],
+                              ),
+                            ),
+                            Text(
+                              'Manage your subscriptions',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: Colors.grey[600],
+                              ),
+                            ),
+                          ],
                         ),
-                        Text(
-                          'Manage your subscriptions',
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: Colors.grey[600],
-                          ),
-                        ),
+                        // IconButton(
+                        //   icon: const Icon(
+                        //     Icons.notifications_outlined,
+                        //     color: Colors.black,
+                        //     size: 24,
+                        //   ),
+                        //   onPressed: () {
+                        //     Navigator.push(context, MaterialPageRoute(builder:
+                        //         (context)=>NotificationScreen()));
+                        //   },
+                        // ),
                       ],
                     ),
                   ),
@@ -312,31 +329,31 @@ class DailyOrderCard extends StatelessWidget {
                 Row(
                   children: [
                     // Edit button
-                    IconButton(
-                      onPressed: () {},
-                      icon: Icon(Icons.edit_outlined, size: 20, color: Colors.grey[600]),
-                      style: IconButton.styleFrom(
-                        backgroundColor: Colors.grey[100],
-                        padding: const EdgeInsets.all(8),
-                      ),
-                    ),
+                    // IconButton(
+                    //   onPressed: () {},
+                    //   icon: Icon(Icons.edit_outlined, size: 20, color: Colors.grey[600]),
+                    //   style: IconButton.styleFrom(
+                    //     backgroundColor: Colors.grey[100],
+                    //     padding: const EdgeInsets.all(8),
+                    //   ),
+                    // ),
                     const SizedBox(width: 8),
 
                     // Pause / Resume
-                    IconButton(
-                      onPressed: () {
-                        context.read<DailyOrderController>().toggleOrderStatus(order.id);
-                      },
-                      icon: Icon(
-                        order.isActive ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      style: IconButton.styleFrom(
-                        backgroundColor: order.isActive ? Colors.orange : Colors.green,
-                        padding: const EdgeInsets.all(8),
-                      ),
-                    ),
+                    // IconButton(
+                    //   onPressed: () {
+                    //     context.read<DailyOrderController>().toggleOrderStatus(order.id);
+                    //   },
+                    //   icon: Icon(
+                    //     order.isActive ? Icons.pause : Icons.play_arrow,
+                    //     color: Colors.white,
+                    //     size: 20,
+                    //   ),
+                    //   style: IconButton.styleFrom(
+                    //     backgroundColor: order.isActive ? Colors.orange : Colors.green,
+                    //     padding: const EdgeInsets.all(8),
+                    //   ),
+                    // ),
                   ],
                 ),
               ],

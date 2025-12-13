@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 
 import '../../../Core/Constant/app_colors.dart';
+import '../../NotificationScreen/NotificationScreen.dart';
 import 'OrderHistoryController.dart';
 import 'OrderHistoryModal.dart';
 
@@ -58,6 +59,7 @@ class _OrderHistoryViewState extends State<OrderHistoryView> {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
                         'Order History',
@@ -66,6 +68,17 @@ class _OrderHistoryViewState extends State<OrderHistoryView> {
                           fontWeight: FontWeight.bold,
                           color: Colors.grey[800],
                         ),
+                      ),
+
+                      IconButton(
+                        icon: const Icon(
+                          Icons.notifications_outlined,
+                          color: Colors.black,
+                          size: 24,
+                        ),
+                        onPressed: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (context)=>NotificationScreen()));
+                        },
                       ),
                     ],
                   ),
